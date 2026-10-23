@@ -92,9 +92,21 @@ function getAI(customKey?: string): { ai: GoogleGenAI | null; key: string } {
   return { ai: new GoogleGenAI({ apiKey: effectiveKey }), key: effectiveKey };
 }
 
-// Configurable model identifiers with reliable defaults
-const TRANSLATE_MODEL = process.env.GEMINI_TRANSLATE_MODEL || 'gemini-3.8-flash';
-const TRANSCRIBE_MODEL = process.env.GEMINI_TRANSCRIBE_MODEL || 'gemini-3.5-transcribe';
+// Configurable model identifiers with reliable defaults & high-availability fallback chains
+const TRANSLATE_MODELS = [
+  process.env.GEMINI_TRANSLATE_MODEL || 'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-3.8-flash',
+];
+const TRANSLATE_MODEL = TRANSLATE_MODELS[0];
+
+const TRANSCRIBE_MODELS = [
+  process.env.GEMINI_TRANSCRIBE_MODEL || 'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-3.5-transcribe',
+];
+const TRANSCRIBE_MODEL = TRANSCRIBE_MODELS[0];
+
 const TTS_MODEL = process.env.GEMINI_TTS_MODEL || 'gemini-3.8-flash-lite-tts';
 const LIVE_MODEL = process.env.GEMINI_LIVE_MODEL || 'gemini-3.8-live';
 
@@ -191,38 +203,72 @@ Rules:
 - If spoken in English, transcribe in Indian English.
 Output ONLY the transcription text. Do not add quotes, explanations, or notes.`;
 
-    const response = await ai.models.generateContent({
-      model: TRANSCRIBE_MODEL,
-      contents: {
-        parts: [audioPart, { text: prompt }],
-      },
-    });
+    let response: any = null;
+    let usedTranscribeModel = TRANSCRIBE_MODEL;
+    let lastTranscribeErr: any = null;
 
-    const transcript = response.text?.trim() || '';
+    for (const candidateModel of TRANSCRIBE_MODELS) {
+      try {
+        response = await ai.models.generateContent({
+          model: candidateModel,
+          contents: {
+            parts: [audioPart, { text: prompt }],
+          },
+        });
+        usedTranscribeModel = candidateModel;
+        lastTranscribeErr = null;
+        break;
+      } catch (err: any) {
+        lastTranscribeErr = err;
+        console.warn(`Transcription attempt with ${candidateModel} notice:`, err?.message || err);
+      }
+    }
+
+    if (!response && lastTranscribeErr) {
+      throw lastTranscribeErr;
+    }
+
+    const transcript = response?.text?.trim() || '';
     apiQuotaTracker.recordRequest('transcribe', true);
 
     return res.json({
       success: true,
       transcript,
-      model: TRANSCRIBE_MODEL,
+      model: usedTranscribeModel,
     });
   } catch (error: any) {
-    console.warn(`Transcription notice with ${TRANSCRIBE_MODEL}:`, error?.message);
+    console.warn('Transcription error:', error?.message);
     const msg = String(error?.message || '');
     const isQuota = msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED');
+    const is503 = msg.includes('503') || msg.includes('high demand') || msg.includes('UNAVAILABLE');
     apiQuotaTracker.recordRequest('transcribe', false, isQuota);
 
-    return res.status(isQuota ? 429 : 500).json({
+    let cleanError = error?.message || 'Transcription failed';
+    if (cleanError.includes('{"error":')) {
+      try {
+        const jsonMatch = cleanError.match(/\{"error":.*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          cleanError = parsed.error?.message || cleanError;
+        }
+      } catch {}
+    }
+
+    return res.status(isQuota ? 429 : is503 ? 503 : 500).json({
       success: false,
       transcript: '',
       error: isQuota
         ? 'Gemini transcription rate limit / daily quota exceeded (429). Please use manual text input to test translation, or wait for quota reset.'
-        : error?.message || 'Transcription failed',
-      code: isQuota ? 'QUOTA_EXCEEDED' : 'TRANSCRIBE_ERROR',
+        : is503
+        ? 'गूगल सर्वर पर अस्थायी रूप से अत्यधिक लोड है (503 High Demand)। कृपया 5 सेकंड बाद पुनः बोलें या टेक्स्ट इनपुट से टाइप करें।'
+        : cleanError,
+      code: isQuota ? 'QUOTA_EXCEEDED' : is503 ? 'SERVER_HIGH_DEMAND_503' : 'TRANSCRIBE_ERROR',
       quotaExhausted: isQuota,
-      retryAfter: isQuota ? 3600 : undefined,
+      retryAfter: isQuota ? 3600 : is503 ? 5 : undefined,
       hint: isQuota
         ? 'Daily free-tier quota exhausted. You can use manual text input below to test translation, or wait for quota reset.'
+        : is503
+        ? 'गूगल मॉडल पर कुछ पलों के लिए भारी ट्रैफ़िक है। कृपया नीचे दिए गए टेक्स्ट बॉक्स से सीधे टाइप करें।'
         : undefined,
     });
   }
@@ -353,75 +399,98 @@ Respond ONLY with a valid JSON object matching this schema:
   "confidence": 0.95
 }`;
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 14000); // 14s cancellable timeout
-
     let response: any = null;
     let usedModel = TRANSLATE_MODEL;
+    let lastErr: any = null;
 
-    try {
-      response = await ai.models.generateContent({
-        model: TRANSLATE_MODEL,
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-          temperature: 0.2,
-          abortSignal: controller.signal,
-        },
-      });
-      clearTimeout(timeout);
-    } catch (primaryErr: any) {
-      clearTimeout(timeout);
-      const msg = String(primaryErr?.message || primaryErr || '');
+    // High-availability model candidate loop
+    for (const candidateModel of TRANSLATE_MODELS) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 9000); // 9s timeout per candidate model
+
+      try {
+        response = await ai.models.generateContent({
+          model: candidateModel,
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            temperature: 0.2,
+            abortSignal: controller.signal,
+          },
+        });
+        clearTimeout(timeout);
+        usedModel = candidateModel;
+        lastErr = null;
+        break; // Successfully received response!
+      } catch (err: any) {
+        clearTimeout(timeout);
+        lastErr = err;
+        console.warn(`Translation attempt with model ${candidateModel} failed:`, err?.message || err);
+        // Continue to next candidate model in the chain
+      }
+    }
+
+    if (!response && lastErr) {
+      const msg = String(lastErr?.message || lastErr || '');
       const isQuota =
         msg.includes('429') ||
         msg.includes('RESOURCE_EXHAUSTED') ||
         msg.includes('rate limit') ||
         msg.includes('exceeded your current quota') ||
         (msg.toLowerCase().includes('quota') && !msg.includes('OFFLINE_PHRASEBOOK_MISS'));
+      const is503 = msg.includes('503') || msg.includes('high demand') || msg.includes('UNAVAILABLE');
+
+      apiQuotaTracker.recordRequest('translate', false, isQuota);
+
+      // Honest offline phrasebook fallback
+      const offlineResult = getHonestOfflineTranslation(text, sourceLang, targetLang);
+      if (offlineResult.success) {
+        apiQuotaTracker.recordOfflineFallback();
+        return res.json({
+          success: true,
+          data: offlineResult.data,
+          source: 'offline-phrasebook',
+          isOffline: true,
+          notice: is503
+            ? 'गूगल जेमिनी पर उच्च मांग होने के कारण प्रामाणिक ऑफ़लाइन शब्दकोश से अनुवादित किया गया।'
+            : 'Gemini rate limit reached; matched from authentic offline phrasebook',
+        });
+      }
+
+      let cleanError = lastErr?.message || 'Translation service temporarily unavailable.';
+      if (cleanError.includes('{"error":')) {
+        try {
+          const jsonMatch = cleanError.match(/\{"error":.*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            cleanError = parsed.error?.message || cleanError;
+          }
+        } catch {}
+      }
 
       if (isQuota) {
-        apiQuotaTracker.recordRequest('translate', false, true);
-
-        // Honest offline phrasebook fallback
-        const offlineResult = getHonestOfflineTranslation(text, sourceLang, targetLang);
-        if (offlineResult.success) {
-          apiQuotaTracker.recordOfflineFallback();
-          return res.json({
-            success: true,
-            data: offlineResult.data,
-            source: 'offline-phrasebook',
-            isOffline: true,
-            notice: 'Gemini rate limit reached; matched from authentic offline phrasebook',
-          });
-        } else {
-          return res.status(429).json({
-            success: false,
-            error: 'Gemini API daily quota / rate limit reached (HTTP 429). ' + offlineResult.error,
-            isOffline: true,
-            code: 'QUOTA_EXCEEDED',
-          });
-        }
-      } else {
-        // Non-quota error: attempt honest offline fallback
-        apiQuotaTracker.recordRequest('translate', false, false);
-        const offlineResult = getHonestOfflineTranslation(text, sourceLang, targetLang);
-        if (offlineResult.success) {
-          apiQuotaTracker.recordOfflineFallback();
-          return res.json({
-            success: true,
-            data: offlineResult.data,
-            source: 'offline-phrasebook',
-            isOffline: true,
-          });
-        } else {
-          return res.status(500).json({
-            success: false,
-            error: primaryErr?.message || 'Translation service temporarily unavailable.',
-            code: 'TRANSLATE_ERROR',
-          });
-        }
+        return res.status(429).json({
+          success: false,
+          error: 'Gemini API daily quota / rate limit reached (HTTP 429). ' + offlineResult.error,
+          isOffline: true,
+          code: 'QUOTA_EXCEEDED',
+        });
       }
+
+      if (is503) {
+        return res.status(503).json({
+          success: false,
+          error: 'गूगल मॉडल पर इस समय अत्यधिक लोड (503 High Demand) है। कृपया 5-10 सेकंड बाद पुनः प्रयास करें या नीचे दिए गए शब्दकोश का उपयोग करें।',
+          code: 'SERVER_HIGH_DEMAND_503',
+          isOffline: true,
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        error: cleanError,
+        code: 'TRANSLATE_ERROR',
+      });
     }
 
     const responseText = response?.text || '';

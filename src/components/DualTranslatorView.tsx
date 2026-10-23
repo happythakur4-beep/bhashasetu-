@@ -284,6 +284,16 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
         lastSttErrorRef.current === 'network' ||
         (typeof navigator !== 'undefined' && !navigator.onLine));
 
+    const is503 =
+      !isNoKey &&
+      !isOfflineMiss &&
+      !isQuota &&
+      (raw.includes('503') ||
+        raw.includes('high demand') ||
+        raw.includes('UNAVAILABLE') ||
+        raw.includes('SERVER_HIGH_DEMAND_503') ||
+        raw.includes('अत्यधिक लोड'));
+
     if (isNoKey) {
       setStatusFeedback({
         type: 'warning',
@@ -305,6 +315,16 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
           'बिना सक्रिय इंटरनेट या व्यक्तिगत API Key के केवल शब्दकोश (Phrasebook) के सहेजे गए वाक्य समर्थित हैं।',
         hint:
           'कार्रवाई (Action Steps):\n1. 🔑 अपनी मुफ़्त GEMINI_API_KEY कॉन्फ़िगर करें ताकि कोई भी मनचाहा वाक्य ट्रांसलेट हो सके।\n2. 📖 नीचे दिए गए ऑफ़लाइन वाक्यांशों (Phrasebook) का चयन करें।',
+      });
+    } else if (is503) {
+      setStatusFeedback({
+        type: 'warning',
+        titleHi: '⏳ गूगल सर्वर पर अस्थायी उच्च भार (Google 503 High Demand)',
+        titleEn: 'Google Gemini servers are currently experiencing temporary high demand spikes.',
+        details:
+          'यह आपके ऐप या कोड की खराबी नहीं है — गूगल के क्लाउड मॉडल पर दुनिया भर से अत्यधिक ट्रैफ़िक के कारण कुछ पलों की देरी है। सर्वर अब हाई-कैपेसिटी बैकअप मॉडल (gemini-2.5-flash) का उपयोग कर रहा है।',
+        hint:
+          'कार्रवाई योग्य विकल्प (Action Steps):\n1. 🔄 3-5 सेकंड बाद दोबारा बोलें या नीचे सेंड बटन दबाएं।\n2. 📖 या बिना इंटरनेट के तुरंत अनुवाद के लिए नीचे दिए गए ऑफ़लाइन शब्दकोश का उपयोग करें।',
       });
     } else if (isQuota) {
       setStatusFeedback({
@@ -348,11 +368,21 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
         hint: 'सुझाव: यदि ऑडियो ट्रांसक्रिप्शन में समस्या है, तो कोटा रीसेट की प्रतीक्षा करें, व्यक्तिगत API Key जोड़ें, या टेक्स्ट इनपुट का उपयोग करें।',
       });
     } else {
+      let cleanMsg = raw;
+      if (cleanMsg.includes('{"error":')) {
+        try {
+          const match = cleanMsg.match(/\{"error":.*\}/);
+          if (match) {
+            const parsed = JSON.parse(match[0]);
+            cleanMsg = parsed.error?.message || cleanMsg;
+          }
+        } catch {}
+      }
       setStatusFeedback({
-        type: 'error',
-        titleHi: 'अनुवाद त्रुटि (Translation Notice)',
-        titleEn: raw,
-        hint: 'सुझाव: दैनिक कोटा रीसेट होने की प्रतीक्षा करें, व्यक्तिगत API Key कॉन्फ़िगर करें, या ऑफ़लाइन शब्दकोश का उपयोग करें।',
+        type: 'warning',
+        titleHi: 'अनुवाद सूचना (Translation Notice)',
+        titleEn: cleanMsg,
+        hint: 'सुझाव: कुछ क्षण बाद पुनः प्रयास करें या नीचे दिए गए ऑफ़लाइन शब्दकोश का उपयोग करें।',
       });
     }
   };

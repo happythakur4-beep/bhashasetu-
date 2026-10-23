@@ -265,6 +265,29 @@ export const WalkieTalkieView: React.FC<WalkieTalkieViewProps> = ({
       return;
     }
 
+    const is503 =
+      !isQuota &&
+      !isNetwork &&
+      !isDialectOffline &&
+      (raw.includes('503') ||
+        raw.includes('high demand') ||
+        raw.includes('UNAVAILABLE') ||
+        raw.includes('SERVER_HIGH_DEMAND_503') ||
+        raw.includes('अत्यधिक लोड'));
+
+    if (is503) {
+      setStatusFeedback({
+        type: 'network',
+        titleHi: '⏳ गूगल सर्वर पर अस्थायी उच्च भार (Google 503 High Demand)',
+        titleEn: 'Google Gemini servers are currently experiencing temporary high demand spikes.',
+        details:
+          'यह आपके ऐप या कोड की खराबी नहीं है — गूगल के क्लाउड मॉडल पर दुनिया भर से अत्यधिक ट्रैफ़िक के कारण कुछ पलों की देरी है। सर्वर अब हाई-कैपेसिटी बैकअप मॉडल (gemini-2.5-flash) का उपयोग कर रहा है।',
+        hint:
+          'कार्रवाई योग्य विकल्प (Actionable Steps):\n1. 🔄 3-5 सेकंड बाद PTT बटन दोबारा दबाएं।\n2. 📖 या बिना इंटरनेट के तुरंत अनुवाद के लिए नीचे दिए गए ऑफ़लाइन शब्दकोश का उपयोग करें।',
+      });
+      return;
+    }
+
     if (isNoSpeech) {
       setStatusFeedback({
         type: 'no_speech',
@@ -278,11 +301,22 @@ export const WalkieTalkieView: React.FC<WalkieTalkieViewProps> = ({
       return;
     }
 
+    let cleanMsg = raw || 'Translation request could not be completed.';
+    if (cleanMsg.includes('{"error":')) {
+      try {
+        const match = cleanMsg.match(/\{"error":.*\}/);
+        if (match) {
+          const parsed = JSON.parse(match[0]);
+          cleanMsg = parsed.error?.message || cleanMsg;
+        }
+      } catch {}
+    }
+
     setStatusFeedback({
       type: 'general',
       titleHi: 'ट्रांसलेशन सूचना (Translation Notice)',
-      titleEn: raw || 'Translation request could not be completed.',
-      details: raw,
+      titleEn: cleanMsg,
+      details: cleanMsg,
       hint: 'कृपया इनपुट जांचें या प्रमाणित शब्दकोश के वाक्यों का उपयोग करें।',
     });
   };
