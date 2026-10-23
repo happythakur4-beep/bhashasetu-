@@ -22,6 +22,7 @@ import { LanguagePackManagerModal } from './components/LanguagePackManagerModal'
 import { WordLearningModal } from './components/WordLearningModal';
 import { FrontPageAuthModal } from './components/FrontPageAuthModal';
 import { UnrecognizedWordPopup, UnrecognizedWordData } from './components/UnrecognizedWordPopup';
+import { SelfHealingHUD } from './components/SelfHealingHUD';
 import { audioEngine } from './services/audioEngine';
 import { translatorService } from './services/translatorService';
 import { meshNetwork } from './services/meshNetwork';
@@ -53,6 +54,7 @@ function AppContent() {
   // Front Page / Auth Portal state
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => authService.getCurrentUser());
   const [showAuthModal, setShowAuthModal] = useState<boolean>(() => authService.isFirstVisit() && !authService.getCurrentUser());
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
 
   // Dialect / Missing Word Learning Popup state (हाँ / ना / ठीक-ठाक)
   const [showUnrecognizedPopup, setShowUnrecognizedPopup] = useState(false);
@@ -198,6 +200,9 @@ function AppContent() {
           : 'flex flex-col h-screen w-full bg-[#f4f6fb] text-slate-800 overflow-hidden font-sans select-none antialiased relative'
       }
     >
+      {/* Autonomous Self-Healing Floating HUD */}
+      <SelfHealingHUD onOpenDiagnostics={() => setShowDiagnostics(true)} />
+
       {/* Top Header Bar with Theme Toggle */}
       <HeaderBar
         currentChannel={currentChannel}
@@ -219,6 +224,9 @@ function AppContent() {
         onOpenAuth={() => setShowAuthModal(true)}
         user={currentUser}
         onTriggerWordPopup={() => handleTriggerWordPrompt()}
+        showDiagnostics={showDiagnostics}
+        onOpenDiagnostics={() => setShowDiagnostics(true)}
+        onCloseDiagnostics={() => setShowDiagnostics(false)}
       />
 
       {/* Main View Area */}

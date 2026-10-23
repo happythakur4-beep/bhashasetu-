@@ -6,6 +6,7 @@ import {
 } from './languageRegistry';
 import { audioEngine } from './audioEngine';
 import { customVocabularyService } from './customVocabularyService';
+import { selfHealingEngine } from './selfHealingEngine';
 
 class TranslatorService {
   private isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
@@ -248,6 +249,7 @@ class TranslatorService {
         } else {
           const errData = await res.json().catch(() => ({}));
           if (res.status === 429 || errData.code === 'QUOTA_EXCEEDED') {
+            selfHealingEngine.healGeminiAI('Gemini Quota (429) limit hit; auto-switched to offline dialect lexicon');
             const phraseMatch = findInOfflinePhrasebook(trimmed, sourceLang, targetLang);
             if (phraseMatch) {
               return {
@@ -274,6 +276,7 @@ class TranslatorService {
       } catch (err: any) {
         const msg = String(err?.message || '');
         if (err?.name === 'AbortError' || msg.includes('aborted') || msg.includes('timeout')) {
+          selfHealingEngine.healGeminiAI('Network request timeout; fallback to curated offline phrasebook');
           const phraseMatch = findInOfflinePhrasebook(trimmed, sourceLang, targetLang);
           if (phraseMatch) {
             return {

@@ -42,6 +42,9 @@ interface HeaderBarProps {
   onOpenAuth?: () => void;
   user?: UserProfile | null;
   onTriggerWordPopup?: () => void;
+  showDiagnostics?: boolean;
+  onOpenDiagnostics?: () => void;
+  onCloseDiagnostics?: () => void;
 }
 
 export const HeaderBar: React.FC<HeaderBarProps> = ({
@@ -57,6 +60,9 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   onOpenAuth,
   user,
   onTriggerWordPopup,
+  showDiagnostics: externalShowDiagnostics,
+  onOpenDiagnostics,
+  onCloseDiagnostics,
 }) => {
   const { isDark, toggleTheme } = useTheme();
   const [timeStr, setTimeStr] = useState('');
@@ -66,8 +72,12 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   const [peerStatus, setPeerStatus] = useState<PeerStatus>(peerMesh.getStatus());
   const [peerCount, setPeerCount] = useState<number>(peerMesh.getPeerCount());
   const [copiedShareLink, setCopiedShareLink] = useState(false);
-  const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [internalShowDiagnostics, setInternalShowDiagnostics] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+
+  const isDiagnosticsOpen = externalShowDiagnostics !== undefined ? externalShowDiagnostics : internalShowDiagnostics;
+  const handleOpenDiagnostics = onOpenDiagnostics || (() => setInternalShowDiagnostics(true));
+  const handleCloseDiagnostics = onCloseDiagnostics || (() => setInternalShowDiagnostics(false));
 
   useEffect(() => {
     const unsub = peerMesh.onStatusChange((status, count) => {
@@ -472,7 +482,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
 
           {/* Diagnostics Modal Button */}
           <button
-            onClick={() => setShowDiagnostics(true)}
+            onClick={handleOpenDiagnostics}
             className={`p-1.5 rounded-lg border transition-colors flex items-center gap-1 text-xs font-mono ${
               isDark ? 'bg-zinc-850 border-zinc-750 text-blue-400 hover:bg-zinc-800' : 'bg-white border-slate-200 text-blue-700 shadow-xs'
             }`}
@@ -520,8 +530,8 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
 
       {/* Diagnostics Modal */}
       <DiagnosticsModal
-        isOpen={showDiagnostics}
-        onClose={() => setShowDiagnostics(false)}
+        isOpen={isDiagnosticsOpen}
+        onClose={handleCloseDiagnostics}
       />
 
       {/* Onboarding Guide Modal */}
