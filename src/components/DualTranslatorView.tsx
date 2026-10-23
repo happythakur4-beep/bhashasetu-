@@ -48,6 +48,8 @@ interface StatusFeedback {
   hint?: string;
   isQuota?: boolean;
   isNetwork?: boolean;
+  isNoKey?: boolean;
+  phoneticText?: string;
 }
 
 export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
@@ -172,6 +174,20 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
         // Priority 2: Browser SpeechSynthesis with truthful checks
         const voiceCheck = audioEngine.checkVoiceAvailability(msg.targetLang);
         if (!voiceCheck.available) {
+          if (msg.phoneticText) {
+            setStatusFeedback({
+              type: 'info',
+              titleHi: `डिवाइस में ${msg.targetLang === 'or' ? 'उड़िया' : msg.targetLang.toUpperCase()} वॉयस नहीं है — ध्वन्यात्मक उच्चारण बजाया जा रहा है`,
+              titleEn: `${voiceCheck.warning || 'No native voice installed.'} Playing phonetic pronunciation approximation.`,
+              details: `उच्चारण (Phonetic): "${msg.phoneticText}"`,
+              phoneticText: msg.phoneticText,
+            });
+            await audioEngine.speakPhonetic(msg.phoneticText, {
+              onEnd: () => setActivePlayingId(null),
+            });
+            return;
+          }
+
           setStatusFeedback({
             type: 'warning',
             titleHi: 'डिवाइस में वॉयस उपलब्ध नहीं है',
@@ -227,17 +243,32 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
   const handleTranslationError = (err: any) => {
     const raw = String(err?.message || err || '');
 
+    const isNoKey =
+      raw.includes('NO_API_KEY') ||
+      raw.includes('जेमिनी API Key कॉन्फ़िगर नहीं है') ||
+      raw.includes('Server Transcription Unavailable') ||
+      raw.includes('GEMINI_API_KEY is not configured') ||
+      raw.includes('व्यक्तिगत GEMINI_API_KEY') ||
+      raw.includes('API Key');
+
+    const isOfflineMiss =
+      raw.includes('Offline translation is only available') ||
+      raw.includes('OFFLINE_PHRASEBOOK_MISS');
+
     const isQuota =
-      raw.includes('429') ||
-      raw.includes('Quota') ||
-      raw.includes('quota') ||
-      raw.includes('QUOTA_EXCEEDED') ||
-      raw.includes('RESOURCE_EXHAUSTED') ||
-      raw.includes('कोटा समाप्त') ||
-      raw.includes('rate limit') ||
-      raw.includes('Too Many Requests');
+      !isNoKey &&
+      !isOfflineMiss &&
+      (raw.includes('429') ||
+        raw.includes('QUOTA_EXCEEDED') ||
+        raw.includes('RESOURCE_EXHAUSTED') ||
+        raw.includes('कोटा समाप्त') ||
+        raw.includes('rate limit') ||
+        raw.includes('Too Many Requests') ||
+        (raw.toLowerCase().includes('quota') && !raw.includes('offline')));
 
     const isNetwork =
+      !isNoKey &&
+      !isOfflineMiss &&
       !isQuota &&
       (raw.includes('network') ||
         raw.includes('Network') ||
@@ -253,7 +284,29 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
         lastSttErrorRef.current === 'network' ||
         (typeof navigator !== 'undefined' && !navigator.onLine));
 
-    if (isQuota) {
+    if (isNoKey) {
+      setStatusFeedback({
+        type: 'warning',
+        isNoKey: true,
+        titleHi: '🔑 जेमिनी API Key कॉन्फ़िगर नहीं है (Gemini API Key Required)',
+        titleEn: 'Gemini API Key is needed for arbitrary mic speech transcription and AI translation.',
+        details:
+          'माइक्रोफ़ोन से मनचाही आवाज़ को ट्रांसक्राइब करने और जेमिनी AI वॉइस के लिए मुफ़्त जेमिनी API Key जोड़ें। (बिना API Key के केवल नीचे दिए गए ऑफ़लाइन वाक्यांश काम करते हैं)।',
+        hint:
+          'कार्रवाई योग्य विकल्प (Action Steps):\n1. 🔑 नीचे दिए गए "API Key दर्ज करें" बटन पर क्लिक करके अपनी मुफ़्त API Key दर्ज करें।\n2. 📖 या बिना किसी API Key के अनुवाद करने के लिए "Test Offline Phrasebook" बटन दबाएं।',
+      });
+    } else if (isOfflineMiss) {
+      setStatusFeedback({
+        type: 'warning',
+        isNoKey: true,
+        titleHi: 'ऑफ़लाइन अनुवाद अनुपलब्ध (Offline Dialect Notice)',
+        titleEn: 'Dynamic translation requires Gemini API key. This uncurated sentence is not in the offline phrasebook.',
+        details:
+          'बिना सक्रिय इंटरनेट या व्यक्तिगत API Key के केवल शब्दकोश (Phrasebook) के सहेजे गए वाक्य समर्थित हैं।',
+        hint:
+          'कार्रवाई (Action Steps):\n1. 🔑 अपनी मुफ़्त GEMINI_API_KEY कॉन्फ़िगर करें ताकि कोई भी मनचाहा वाक्य ट्रांसलेट हो सके।\n2. 📖 नीचे दिए गए ऑफ़लाइन वाक्यांशों (Phrasebook) का चयन करें।',
+      });
+    } else if (isQuota) {
       setStatusFeedback({
         type: 'quota',
         isQuota: true,
@@ -274,16 +327,6 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
           'यह "No Speech" त्रुटि नहीं है — माइक्रोफ़ोन सक्रिय था, लेकिन इंटरनेट या अनुवाद सर्वर से संपर्क नहीं हो सका।',
         hint:
           'कार्रवाई योग्य विकल्प (Actionable Steps):\n1. ⏳ इंटरनेट कनेक्शन की जाँच करें या सर्वर पुनः कनेक्ट होने की प्रतीक्षा करें।\n2. 🔑 स्थिर कनेक्शन पर व्यक्तिगत API Key कॉन्फ़िगर करें।\n3. 📖 नीचे दिए गए ऑफ़लाइन शब्दकोश (Phrasebook) के वाक्यों का उपयोग करें।',
-      });
-    } else if (raw.includes('Offline translation is only available') || raw.includes('OFFLINE_PHRASEBOOK_MISS')) {
-      setStatusFeedback({
-        type: 'warning',
-        titleHi: 'ऑफ़लाइन अनुवाद अनुपलब्ध (Offline Dialect Notice)',
-        titleEn: 'Dynamic translation requires Gemini API quota. This uncurated sentence is not in the offline phrasebook.',
-        details:
-          'बिना सक्रिय कोटा या ऑफ़लाइन मोड में केवल शब्दकोश (Phrasebook) के सहेजे गए वाक्य समर्थित हैं।',
-        hint:
-          'मौन फ़ॉलबैक निषेध (Zero Silent Fallbacks): हिंदी या अंग्रेज़ी में कोई मौन (Silent) अनुवाद नहीं किया गया है। बोली की प्रामाणिकता बनाए रखने के लिए, वास्तविक अनुवाद हेतु कोटा रीसेट की प्रतीक्षा करें या व्यक्तिगत API Key कॉन्फ़िगर करें।',
       });
     } else if (raw.includes('No speech or text') || raw.includes('No speech detected') || raw.includes('कोई आवाज़ नहीं मिली')) {
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
@@ -992,9 +1035,57 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
             </button>
           </div>
 
+          {/* Action buttons for No API Key resolution */}
+          {statusFeedback.isNoKey && (
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-amber-500/30">
+              {onOpenPackManager && (
+                <button
+                  onClick={onOpenPackManager}
+                  className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-500 hover:from-purple-500 hover:to-indigo-500 text-white font-mono font-bold text-xs flex items-center gap-1.5 shadow-md shadow-purple-950/40 transition-all active:scale-95"
+                  title="Configure Gemini API Key"
+                >
+                  <KeyRound className="w-3.5 h-3.5" />
+                  <span>🔑 API Key दर्ज करें (Enter Free Key)</span>
+                </button>
+              )}
+              <button
+                onClick={() => handleManualTranslate('A', phraseA)}
+                className="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-mono font-bold text-xs flex items-center gap-1.5 border border-zinc-700 transition-all active:scale-95"
+                title="Test with curated offline phrasebook (no key needed)"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
+                <span>📖 टेस्ट ऑफ़लाइन वाक्यांश (Quota-Free)</span>
+              </button>
+            </div>
+          )}
+
+          {/* Action buttons for Phonetic Playback when Native Voice is Missing */}
+          {statusFeedback.phoneticText && (
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-sky-500/30">
+              <button
+                onClick={() => audioEngine.speakPhonetic(statusFeedback.phoneticText!)}
+                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-mono font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-950/40 transition-all active:scale-95"
+                title="Play phonetic pronunciation approximation"
+              >
+                <Volume2 className="w-3.5 h-3.5" />
+                <span>🔊 ध्वन्यात्मक उच्चारण पुनः सुनें (Replay Phonetic)</span>
+              </button>
+            </div>
+          )}
+
           {/* Action buttons for Quota 429 resolution */}
           {(statusFeedback.isQuota || statusFeedback.type === 'quota') && (
             <div className="flex flex-wrap gap-2 pt-1 border-t border-red-500/30">
+              {onOpenPackManager && (
+                <button
+                  onClick={onOpenPackManager}
+                  className="px-2.5 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-mono font-bold text-[10px] flex items-center gap-1 transition-all"
+                  title="Configure personal Gemini API Key"
+                >
+                  <KeyRound className="w-3 h-3" />
+                  <span>🔑 Configure API Key</span>
+                </button>
+              )}
               <button
                 onClick={() => handleManualTranslate('A', phraseA)}
                 className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-bold text-[10px] flex items-center gap-1 transition-all"

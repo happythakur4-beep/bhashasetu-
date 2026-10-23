@@ -392,6 +392,24 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
             </button>
           )}
 
+          {/* Settings & Gemini API Key Button */}
+          {onOpenSettings && (
+            <button
+              onClick={onOpenSettings}
+              className={`p-1.5 rounded-lg border transition-colors flex items-center gap-1 text-xs font-mono ${
+                !hasGeminiKey
+                  ? 'bg-amber-950/70 border-amber-500/80 text-amber-300 hover:bg-amber-900/80 animate-pulse'
+                  : isDark
+                  ? 'bg-zinc-850 border-zinc-750 text-emerald-400 hover:bg-zinc-800'
+                  : 'bg-white border-slate-200 text-emerald-700 shadow-xs'
+              }`}
+              title={hasGeminiKey ? 'Settings & Offline Language Packs' : '🔑 Configure Gemini API Key (Free API Key)'}
+            >
+              <Settings className="w-4 h-4" />
+              <span className="hidden lg:inline">{hasGeminiKey ? 'Settings' : 'API Key'}</span>
+            </button>
+          )}
+
           {/* Install PWA Button */}
           <PWAInstallButton variant="compact" />
 

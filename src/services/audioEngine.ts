@@ -847,12 +847,62 @@ class AudioEngine {
     };
   }
 
+  // Standalone phonetic pronunciation speech generator (for dialects or languages lacking native browser voice models)
+  public speakPhonetic(
+    phoneticText: string,
+    options?: { onStart?: () => void; onEnd?: () => void; pitch?: number; rate?: number }
+  ): Promise<{ spoke: boolean; warning?: string }> {
+    return new Promise((resolve) => {
+      if (!('speechSynthesis' in window)) {
+        resolve({ spoke: false, warning: 'Speech synthesis not available' });
+        return;
+      }
+
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(phoneticText);
+      const voices = window.speechSynthesis.getVoices();
+
+      // Look for Indian English (en-IN), then standard English (en), then Hindi (hi)
+      const indianVoice =
+        voices.find((v) => v.lang.toLowerCase() === 'en-in') ||
+        voices.find((v) => v.lang.toLowerCase().startsWith('en-in')) ||
+        voices.find((v) => v.lang.toLowerCase().startsWith('hi')) ||
+        voices.find((v) => v.lang.toLowerCase().startsWith('en')) ||
+        voices[0];
+
+      if (indianVoice) {
+        utterance.voice = indianVoice;
+        utterance.lang = indianVoice.lang;
+      }
+      utterance.rate = options?.rate ?? 0.88; // Deliberate phonetic pacing for high legibility
+      utterance.pitch = options?.pitch ?? 1.0;
+
+      utterance.onstart = () => {
+        options?.onStart?.();
+      };
+      utterance.onend = () => {
+        if (this.hapticOnComplete) {
+          this.triggerHaptic(20);
+        }
+        options?.onEnd?.();
+        resolve({ spoke: true });
+      };
+      utterance.onerror = (e) => {
+        console.warn('Phonetic TTS error:', e);
+        options?.onEnd?.();
+        resolve({ spoke: false, warning: 'Phonetic playback failed' });
+      };
+
+      window.speechSynthesis.speak(utterance);
+    });
+  }
+
   // Text to Speech (TTS) Output with truthful voice check
   public speak(
     text: string,
     lang: LanguageCode,
-    options?: { onStart?: () => void; onEnd?: () => void; pitch?: number; rate?: number }
-  ): Promise<{ spoke: boolean; warning?: string }> {
+    options?: { onStart?: () => void; onEnd?: () => void; pitch?: number; rate?: number; phoneticFallback?: string }
+  ): Promise<{ spoke: boolean; warning?: string; isPhonetic?: boolean }> {
     return new Promise((resolve) => {
       if (!('speechSynthesis' in window)) {
         resolve({ spoke: false, warning: 'Speech synthesis not available' });
@@ -864,6 +914,14 @@ class AudioEngine {
       // Check voice availability first
       const voiceCheck = this.checkVoiceAvailability(lang);
       if (!voiceCheck.available) {
+        // If phonetic fallback is available and user permitted, play phonetic articulation
+        if (options?.phoneticFallback) {
+          this.speakPhonetic(options.phoneticFallback, options).then((res) => {
+            resolve({ spoke: res.spoke, isPhonetic: true, warning: voiceCheck.warning });
+          });
+          return;
+        }
+
         console.warn(`TTS Warning: ${voiceCheck.warning}`);
         resolve({ spoke: false, warning: voiceCheck.warning });
         return;

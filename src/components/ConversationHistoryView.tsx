@@ -347,7 +347,9 @@ export const ConversationHistoryView: React.FC<ConversationHistoryViewProps> = (
                         if (msg.audioBase64) {
                           audioEngine.playAudioBase64(msg.audioBase64);
                         } else {
-                          audioEngine.speak(msg.translatedText, msg.targetLang);
+                          audioEngine.speak(msg.translatedText, msg.targetLang, {
+                            phoneticFallback: msg.phoneticText,
+                          });
                         }
                       }}
                       className={

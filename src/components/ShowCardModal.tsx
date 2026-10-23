@@ -43,6 +43,8 @@ export const ShowCardModal: React.FC<ShowCardModalProps> = ({
   const [fontSizeLevel, setFontSizeLevel] = useState<'normal' | 'large' | 'huge'>('large');
   const [isFlipped180, setIsFlipped180] = useState(false);
   const [selectedReply, setSelectedReply] = useState<string | null>(null);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [audioNotice, setAudioNotice] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -50,10 +52,44 @@ export const ShowCardModal: React.FC<ShowCardModalProps> = ({
     SUPPORTED_LANGUAGES.find((l) => l.code === targetLang) || SUPPORTED_LANGUAGES[0];
   const sourceLangConfig =
     SUPPORTED_LANGUAGES.find((l) => l.code === sourceLang) || SUPPORTED_LANGUAGES[0];
+  const voiceCheck = audioEngine.checkVoiceAvailability(targetLang);
 
-  const handleSpeakTarget = () => {
+  const handleSpeakTarget = async () => {
     audioEngine.triggerHaptic(40);
-    audioEngine.speak(translatedText, targetLang);
+    setIsPlayingAudio(true);
+    setAudioNotice(null);
+
+    // If native voice is not installed on this browser (e.g. Odia), speak phonetic pronunciation
+    if (!voiceCheck.available && phoneticText) {
+      setAudioNotice(`🔊 ध्वन्यात्मक उच्चारण बजाया जा रहा है (Playing Phonetic: "${phoneticText}")...`);
+      await audioEngine.speakPhonetic(phoneticText, {
+        onEnd: () => setIsPlayingAudio(false),
+      });
+      setTimeout(() => setAudioNotice(null), 3500);
+      return;
+    }
+
+    const speakRes = await audioEngine.speak(translatedText, targetLang, {
+      phoneticFallback: phoneticText,
+      onEnd: () => setIsPlayingAudio(false),
+    });
+
+    if (!speakRes.spoke) {
+      setIsPlayingAudio(false);
+      if (phoneticText) {
+        setAudioNotice(`🔊 ध्वन्यात्मक उच्चारण बजाया जा रहा है...`);
+        await audioEngine.speakPhonetic(phoneticText);
+        setTimeout(() => setAudioNotice(null), 3500);
+      } else {
+        setAudioNotice('⚠️ इस डिवाइस/ब्राउज़र में इस भाषा की आवाज़ स्थापित नहीं है।');
+        setTimeout(() => setAudioNotice(null), 4000);
+      }
+    } else {
+      if (speakRes.isPhonetic) {
+        setAudioNotice('🔊 ध्वन्यात्मक उच्चारण बजाया गया (Phonetic Voice Played)');
+        setTimeout(() => setAudioNotice(null), 3000);
+      }
+    }
   };
 
   // Quick reply options tailored to the target language (for the local shopkeeper/villager to tap)
@@ -242,17 +278,38 @@ export const ShowCardModal: React.FC<ShowCardModalProps> = ({
                 🔊 &quot;{phoneticText}&quot;
               </div>
             )}
+
+            {!voiceCheck.available && phoneticText && (
+              <div className="mt-2 text-[11px] font-mono text-amber-400/90 dark:text-amber-300/90">
+                ℹ️ इस ब्राउज़र पर {targetLangConfig.name} वॉयस उपलब्ध नहीं है। बटन दबाने पर ध्वन्यात्मक उच्चारण (Phonetic Audio) बजेगा।
+              </div>
+            )}
           </div>
 
           {/* Large Speak Button */}
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center gap-2">
             <button
               onClick={handleSpeakTarget}
-              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 text-white font-mono font-bold text-sm sm:text-base flex items-center gap-2 shadow-lg shadow-emerald-900/30 transition-all active:scale-95"
+              className={`px-6 py-3 rounded-2xl text-white font-mono font-bold text-sm sm:text-base flex items-center gap-2 shadow-lg transition-all active:scale-95 ${
+                isPlayingAudio
+                  ? 'bg-purple-600 animate-pulse shadow-purple-900/40'
+                  : 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-900/30'
+              }`}
             >
-              <Volume2 className="w-5 h-5 animate-pulse" />
-              <span>आवाज़ में सुनाएं (Tap to Speak)</span>
+              <Volume2 className={`w-5 h-5 ${isPlayingAudio ? 'animate-bounce' : 'animate-pulse'}`} />
+              <span>
+                {isPlayingAudio
+                  ? 'आवाज़ बज रही है...'
+                  : !voiceCheck.available && phoneticText
+                  ? 'ध्वन्यात्मक आवाज़ सुनें (Play Phonetic)'
+                  : 'आवाज़ में सुनाएं (Tap to Speak)'}
+              </span>
             </button>
+            {audioNotice && (
+              <div className="text-xs font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 px-3 py-1 rounded-xl animate-in fade-in">
+                {audioNotice}
+              </div>
+            )}
           </div>
 
           {/* Quick Tap Answers for the Other Person */}

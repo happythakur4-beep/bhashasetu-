@@ -692,6 +692,12 @@ export const WalkieTalkieView: React.FC<WalkieTalkieViewProps> = ({
     } else {
       const voiceCheck = audioEngine.checkVoiceAvailability(latestTransmission.targetLang);
       if (!voiceCheck.available) {
+        if (latestTransmission.phoneticText) {
+          setAudioPlaybackNotice(`ℹ️ ${latestTransmission.targetLang.toUpperCase()} वॉयस उपलब्ध नहीं — ध्वन्यात्मक आवाज़ (Phonetic Voice) बजाई जा रही है...`);
+          await audioEngine.speakPhonetic(latestTransmission.phoneticText);
+          setTimeout(() => setAudioPlaybackNotice(null), 3500);
+          return;
+        }
         setAudioPlaybackNotice(`⚠️ ${voiceCheck.warning}`);
         return;
       }
@@ -700,7 +706,9 @@ export const WalkieTalkieView: React.FC<WalkieTalkieViewProps> = ({
       } else {
         setAudioPlaybackNotice('🔊 Synthesizing speech...');
       }
-      await audioEngine.speak(latestTransmission.translatedText, latestTransmission.targetLang);
+      await audioEngine.speak(latestTransmission.translatedText, latestTransmission.targetLang, {
+        phoneticFallback: latestTransmission.phoneticText,
+      });
       setTimeout(() => setAudioPlaybackNotice(null), 3000);
     }
   };

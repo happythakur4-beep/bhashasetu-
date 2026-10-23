@@ -375,14 +375,10 @@ Respond ONLY with a valid JSON object matching this schema:
       const msg = String(primaryErr?.message || primaryErr || '');
       const isQuota =
         msg.includes('429') ||
-        msg.includes('quota') ||
-        msg.includes('Quota') ||
         msg.includes('RESOURCE_EXHAUSTED') ||
         msg.includes('rate limit') ||
         msg.includes('exceeded your current quota') ||
-        msg.includes('aborted') ||
-        primaryErr?.name === 'AbortError' ||
-        apiQuotaTracker.getSummary(Boolean(key)).quotaStatus === 'quota_exceeded';
+        (msg.toLowerCase().includes('quota') && !msg.includes('OFFLINE_PHRASEBOOK_MISS'));
 
       if (isQuota) {
         apiQuotaTracker.recordRequest('translate', false, true);

@@ -71,7 +71,7 @@ export function getHonestOfflineTranslation(
   // Never simulate or echo text with fabricated success.
   return {
     success: false,
-    error: `Offline translation only supports exact phrasebook expressions. Dynamic translation into ${langNames[targetLang] || targetLang} requires an active Internet connection with Gemini API quota.`,
+    error: `Offline translation only supports exact phrasebook expressions. Dynamic translation into ${langNames[targetLang] || targetLang} requires an active Gemini API key.`,
     code: 'OFFLINE_PHRASEBOOK_MISS',
   };
 }

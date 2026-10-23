@@ -68,9 +68,9 @@ export const PhrasebookView: React.FC<PhrasebookViewProps> = ({
     return matchesCat && matchesSearch;
   });
 
-  const handlePlaySpeech = (text: string, lang: LanguageCode) => {
+  const handlePlaySpeech = (text: string, lang: LanguageCode, phonetic?: string) => {
     audioEngine.triggerHaptic(40);
-    audioEngine.speak(text, lang);
+    audioEngine.speak(text, lang, { phoneticFallback: phonetic });
   };
 
   const handleBroadcastPhrase = (phrase: PhraseItem) => {
@@ -353,7 +353,7 @@ export const PhrasebookView: React.FC<PhrasebookViewProps> = ({
                   {/* Right Action buttons */}
                   <div className="flex flex-col gap-1.5 shrink-0">
                     <button
-                      onClick={() => handlePlaySpeech(currentLangData.text, displayLanguage)}
+                      onClick={() => handlePlaySpeech(currentLangData.text, displayLanguage, currentLangData.phonetic)}
                       className={
                         isDark
                           ? 'p-2 rounded-xl bg-zinc-850 hover:bg-zinc-750 text-zinc-200 border border-zinc-750 transition-colors'
