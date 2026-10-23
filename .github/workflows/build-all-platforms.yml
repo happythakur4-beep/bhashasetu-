@@ -27,7 +27,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Setup Java JDK 21
@@ -36,9 +36,6 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           cache: 'gradle'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
 
       - name: Install Node Dependencies
         run: npm ci
@@ -78,13 +75,15 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install Node Dependencies
         run: npm ci
 
       - name: Build macOS Application (.dmg and .zip)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run build:desktop:mac
 
       - name: Upload macOS Artifacts
@@ -109,13 +108,15 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install Node Dependencies
         run: npm ci
 
       - name: Build Windows Application (.exe)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run build:desktop:win
 
       - name: Create Windows Portable Zip
@@ -145,7 +146,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install Node Dependencies
@@ -160,34 +161,3 @@ jobs:
           name: BhashaSetu-Web-PWA
           path: dist/
           retention-days: 30
-
-  # -------------------------------------------------------------
-  # 5. Automated GitHub Release (Triggers when Tag is pushed)
-  # -------------------------------------------------------------
-  release:
-    name: 🚀 Publish GitHub Release
-    needs: [build-android, build-macos, build-windows, build-web]
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Download All Built Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: release-assets/
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: BhashaSetu ${{ github.ref_name }}
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-          files: |
-            release-assets/BhashaSetu-Android-APK/*
-            release-assets/BhashaSetu-macOS-Desktop/*
-            release-assets/BhashaSetu-Windows-Desktop/*
