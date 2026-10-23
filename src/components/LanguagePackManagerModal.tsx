@@ -79,8 +79,21 @@ export const LanguagePackManagerModal: React.FC<LanguagePackManagerModalProps> =
       setPrefs(updatedPrefs);
     });
     setSystemVoices(audioEngine.getAvailableSystemVoices());
+
+    // Sync key from server or storage on open
+    if (isOpen) {
+      const current = translatorService.getApiKey();
+      if (current) {
+        setCustomApiKey(current);
+      } else {
+        translatorService.fetchKeyFromServer().then((k) => {
+          if (k) setCustomApiKey(k);
+        });
+      }
+    }
+
     return () => unsubscribe();
-  }, []);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -650,7 +663,7 @@ export const LanguagePackManagerModal: React.FC<LanguagePackManagerModalProps> =
                     </span>
                   </div>
                   <p className={`text-[11px] font-mono ${isDark ? 'text-zinc-400' : 'text-slate-600'}`}>
-                    Enter your Gemini API key (starts with AIza) for real-time transcription and generative voice.
+                    Enter your Google Gemini API key (from Google AI Studio, starts with AQ... or AIza...) for high-precision neural translation, audio transcription, and voice generation.
                   </p>
                   <div className="flex items-center gap-2">
                     <div className="relative flex-1">
@@ -658,7 +671,7 @@ export const LanguagePackManagerModal: React.FC<LanguagePackManagerModalProps> =
                         type={showKeyText ? 'text' : 'password'}
                         value={customApiKey}
                         onChange={(e) => setCustomApiKey(e.target.value)}
-                        placeholder="AIzaSy..."
+                        placeholder="AQ... or AIzaSy..."
                         className={`w-full text-xs font-mono px-3 py-1.5 rounded-lg border focus:outline-none focus:ring-1 focus:ring-purple-500 ${
                           isDark
                             ? 'bg-zinc-900 border-zinc-700 text-zinc-100 placeholder-zinc-500'
@@ -682,6 +695,11 @@ export const LanguagePackManagerModal: React.FC<LanguagePackManagerModalProps> =
                       {isTestingKey ? 'Verifying...' : keySaved ? 'Saved ✓' : 'Save Key'}
                     </button>
                   </div>
+                  {customApiKey && !keyStatusMessage && (
+                    <p className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> API Key active ({customApiKey.slice(0, 4)}...{customApiKey.slice(-4)})
+                    </p>
+                  )}
                   {keyStatusMessage && (
                     <p className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3" /> {keyStatusMessage}

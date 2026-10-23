@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 import http from 'http';
 import { fileURLToPath } from 'url';
 import { WebSocketServer, WebSocket } from 'ws';
@@ -94,16 +95,14 @@ function getAI(customKey?: string): { ai: GoogleGenAI | null; key: string } {
 
 // Configurable model identifiers with reliable defaults & high-availability fallback chains
 const TRANSLATE_MODELS = [
-  process.env.GEMINI_TRANSLATE_MODEL || 'gemini-2.5-flash',
-  'gemini-2.5-flash-lite',
-  'gemini-3.8-flash',
+  process.env.GEMINI_TRANSLATE_MODEL || 'gemini-3.8-flash',
+  'gemini-3.5-flash-lite',
 ];
 const TRANSLATE_MODEL = TRANSLATE_MODELS[0];
 
 const TRANSCRIBE_MODELS = [
-  process.env.GEMINI_TRANSCRIBE_MODEL || 'gemini-2.5-flash',
-  'gemini-2.5-flash-lite',
-  'gemini-3.5-transcribe',
+  process.env.GEMINI_TRANSCRIBE_MODEL || 'gemini-3.8-flash',
+  'gemini-3.5-flash-lite',
 ];
 const TRANSCRIBE_MODEL = TRANSCRIBE_MODELS[0];
 
@@ -208,20 +207,30 @@ Output ONLY the transcription text. Do not add quotes, explanations, or notes.`;
     let lastTranscribeErr: any = null;
 
     for (const candidateModel of TRANSCRIBE_MODELS) {
-      try {
-        response = await ai.models.generateContent({
-          model: candidateModel,
-          contents: {
-            parts: [audioPart, { text: prompt }],
-          },
-        });
-        usedTranscribeModel = candidateModel;
-        lastTranscribeErr = null;
-        break;
-      } catch (err: any) {
-        lastTranscribeErr = err;
-        console.warn(`Transcription attempt with ${candidateModel} notice:`, err?.message || err);
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          response = await ai.models.generateContent({
+            model: candidateModel,
+            contents: {
+              parts: [audioPart, { text: prompt }],
+            },
+          });
+          usedTranscribeModel = candidateModel;
+          lastTranscribeErr = null;
+          break;
+        } catch (err: any) {
+          lastTranscribeErr = err;
+          const msg = String(err?.message || '');
+          const is503 = msg.includes('503') || msg.includes('high demand') || msg.includes('UNAVAILABLE');
+          if (is503 && attempt === 0) {
+            await new Promise(r => setTimeout(r, 600));
+            continue;
+          }
+          console.warn(`Transcription attempt with ${candidateModel} notice:`, err?.message || err);
+          break;
+        }
       }
+      if (response) break;
     }
 
     if (!response && lastTranscribeErr) {
@@ -405,29 +414,39 @@ Respond ONLY with a valid JSON object matching this schema:
 
     // High-availability model candidate loop
     for (const candidateModel of TRANSLATE_MODELS) {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 9000); // 9s timeout per candidate model
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 9000); // 9s timeout per candidate model
 
-      try {
-        response = await ai.models.generateContent({
-          model: candidateModel,
-          contents: prompt,
-          config: {
-            responseMimeType: 'application/json',
-            temperature: 0.2,
-            abortSignal: controller.signal,
-          },
-        });
-        clearTimeout(timeout);
-        usedModel = candidateModel;
-        lastErr = null;
-        break; // Successfully received response!
-      } catch (err: any) {
-        clearTimeout(timeout);
-        lastErr = err;
-        console.warn(`Translation attempt with model ${candidateModel} failed:`, err?.message || err);
-        // Continue to next candidate model in the chain
+        try {
+          response = await ai.models.generateContent({
+            model: candidateModel,
+            contents: prompt,
+            config: {
+              responseMimeType: 'application/json',
+              temperature: 0.2,
+              abortSignal: controller.signal,
+            },
+          });
+          clearTimeout(timeout);
+          usedModel = candidateModel;
+          lastErr = null;
+          break; // Successfully received response!
+        } catch (err: any) {
+          clearTimeout(timeout);
+          lastErr = err;
+          const msg = String(err?.message || '');
+          const is503 = msg.includes('503') || msg.includes('high demand') || msg.includes('UNAVAILABLE');
+          if (is503 && attempt === 0) {
+            // High demand spike: wait 600ms and retry once before falling back to next candidate model
+            await new Promise(r => setTimeout(r, 600));
+            continue;
+          }
+          console.warn(`Translation attempt with model ${candidateModel} failed:`, err?.message || err);
+          break; // Continue to next candidate model in the chain
+        }
       }
+      if (response) break;
     }
 
     if (!response && lastErr) {
@@ -552,10 +571,12 @@ Respond ONLY with a valid JSON object matching this schema:
 app.get('/api/health', (req, res) => {
   const clientKey = (req.headers['x-gemini-api-key'] as string) || '';
   const { key } = getAI(clientKey);
+  const keyMasked = key ? (key.length > 8 ? key.slice(0, 4) + '...' + key.slice(-4) : '****') : null;
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     hasGeminiKey: Boolean(key),
+    keyMasked,
     models: {
       translate: TRANSLATE_MODEL,
       transcribe: TRANSCRIBE_MODEL,
@@ -579,7 +600,23 @@ app.get('/api/quota', (req, res) => {
   res.json(apiQuotaTracker.getSummary(Boolean(key)));
 });
 
-// 4c. Runtime Key Configuration Endpoint (Protected against remote tampering)
+// 4c. Key Inspection Endpoint (Accessible for localhost dev sessions)
+app.get('/api/key', (req, res) => {
+  const remoteIp = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+  const isLoopback = remoteIp === '127.0.0.1' || remoteIp === '::1' || remoteIp === '::ffff:127.0.0.1' || remoteIp === '' || req.hostname === 'localhost';
+  if (!isLoopback) {
+    return res.status(403).json({ success: false, error: 'Forbidden' });
+  }
+  const effectiveKey = serverApiKey || process.env.GEMINI_API_KEY || '';
+  return res.json({
+    success: true,
+    hasGeminiKey: Boolean(effectiveKey),
+    apiKey: effectiveKey,
+    keyMasked: effectiveKey ? (effectiveKey.length > 8 ? effectiveKey.slice(0, 4) + '...' + effectiveKey.slice(-4) : '****') : null,
+  });
+});
+
+// 4d. Runtime Key Configuration Endpoint (Protected against remote tampering)
 app.post('/api/key', (req, res) => {
   const remoteIp = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
   const isLoopback = remoteIp === '127.0.0.1' || remoteIp === '::1' || remoteIp === '::ffff:127.0.0.1' || remoteIp === '' || req.hostname === 'localhost';
@@ -599,6 +636,40 @@ app.post('/api/key', (req, res) => {
   const { apiKey } = req.body || {};
   if (typeof apiKey === 'string') {
     serverApiKey = apiKey.trim();
+
+    // Persist API key to .env file so server restarts never lose it
+    try {
+      const envPath = path.resolve(__dirname, '.env');
+      let currentEnv = '';
+      if (fs.existsSync(envPath)) {
+        currentEnv = fs.readFileSync(envPath, 'utf-8');
+      }
+
+      if (serverApiKey) {
+        if (currentEnv.includes(`GEMINI_API_KEY=${serverApiKey}`)) {
+          // Already persisted, avoid rewriting file to prevent triggering Vite watcher restart
+          process.env.GEMINI_API_KEY = serverApiKey;
+          return res.json({ success: true, hasGeminiKey: true });
+        }
+
+        if (/^GEMINI_API_KEY=/m.test(currentEnv)) {
+          currentEnv = currentEnv.replace(/^GEMINI_API_KEY=.*$/m, `GEMINI_API_KEY=${serverApiKey}`);
+        } else {
+          currentEnv = (currentEnv ? currentEnv.trim() + '\n' : '') + `GEMINI_API_KEY=${serverApiKey}\n`;
+        }
+        process.env.GEMINI_API_KEY = serverApiKey;
+        fs.writeFileSync(envPath, currentEnv, 'utf-8');
+      } else {
+        if (/^GEMINI_API_KEY=/m.test(currentEnv)) {
+          currentEnv = currentEnv.replace(/^GEMINI_API_KEY=.*$/m, '').trim() + '\n';
+          fs.writeFileSync(envPath, currentEnv, 'utf-8');
+        }
+        delete process.env.GEMINI_API_KEY;
+      }
+    } catch (persistErr) {
+      console.warn('Could not persist API key to .env file:', persistErr);
+    }
+
     return res.json({ success: true, hasGeminiKey: Boolean(serverApiKey) });
   }
   return res.status(400).json({ success: false, error: 'Invalid apiKey parameter' });

@@ -23,9 +23,14 @@ class TranslatorService {
       // Synchronize client key with server on startup if present
       const clientKey = this.getApiKey();
       if (clientKey) {
-        this.syncKeyToServer(clientKey);
+        this.syncKeyToServer(clientKey).then(() => {
+          this.checkServerHealth();
+        });
+      } else {
+        this.fetchKeyFromServer().then(() => {
+          this.checkServerHealth();
+        });
       }
-      this.checkServerHealth();
     }
   }
 
@@ -34,6 +39,22 @@ class TranslatorService {
       return localStorage.getItem('bhashasetu_gemini_api_key') || '';
     }
     return '';
+  }
+
+  public async fetchKeyFromServer(): Promise<string> {
+    try {
+      const res = await fetch('/api/key');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.apiKey) {
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('bhashasetu_gemini_api_key', data.apiKey);
+          }
+          return data.apiKey;
+        }
+      }
+    } catch {}
+    return this.getApiKey();
   }
 
   public async setApiKey(key: string): Promise<boolean> {

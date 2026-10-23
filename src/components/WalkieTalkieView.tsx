@@ -281,7 +281,7 @@ export const WalkieTalkieView: React.FC<WalkieTalkieViewProps> = ({
         titleHi: '⏳ गूगल सर्वर पर अस्थायी उच्च भार (Google 503 High Demand)',
         titleEn: 'Google Gemini servers are currently experiencing temporary high demand spikes.',
         details:
-          'यह आपके ऐप या कोड की खराबी नहीं है — गूगल के क्लाउड मॉडल पर दुनिया भर से अत्यधिक ट्रैफ़िक के कारण कुछ पलों की देरी है। सर्वर अब हाई-कैपेसिटी बैकअप मॉडल (gemini-2.5-flash) का उपयोग कर रहा है।',
+          'यह आपके ऐप या कोड की खराबी नहीं है — गूगल के क्लाउड मॉडल पर दुनिया भर से अत्यधिक ट्रैफ़िक के कारण कुछ पलों की देरी है। सर्वर अब हाई-कैपेसिटी बैकअप मॉडल (gemini-3.5-flash-lite) का उपयोग कर रहा है।',
         hint:
           'कार्रवाई योग्य विकल्प (Actionable Steps):\n1. 🔄 3-5 सेकंड बाद PTT बटन दोबारा दबाएं।\n2. 📖 या बिना इंटरनेट के तुरंत अनुवाद के लिए नीचे दिए गए ऑफ़लाइन शब्दकोश का उपयोग करें।',
       });

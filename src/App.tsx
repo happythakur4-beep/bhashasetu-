@@ -67,9 +67,20 @@ function AppContent() {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    translatorService.checkServerHealth().then((hasKey) => {
-      setHasGeminiKey(hasKey);
-    });
+    // Check network & server status on mount and sync stored API key
+    const storedKey = translatorService.getApiKey();
+    if (storedKey) {
+      setHasGeminiKey(true);
+      translatorService.setApiKey(storedKey).then((hasKey) => {
+        setHasGeminiKey(hasKey);
+      });
+    } else {
+      translatorService.fetchKeyFromServer().then(() => {
+        translatorService.checkServerHealth().then((hasKey) => {
+          setHasGeminiKey(hasKey);
+        });
+      });
+    }
 
     return () => {
       window.removeEventListener('online', handleOnline);
