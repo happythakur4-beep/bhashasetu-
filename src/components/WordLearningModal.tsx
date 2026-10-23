@@ -138,12 +138,13 @@ export const WordLearningModal: React.FC<WordLearningModalProps> = ({
 
           <button
             onClick={onClose}
+            data-testid="close-vocabulary-btn"
+            aria-label="Close Vocabulary"
             className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
               isDark
                 ? 'bg-zinc-800 text-zinc-400 hover:text-zinc-100'
                 : 'bg-slate-200 text-slate-700 hover:text-slate-900'
             }`}
-            aria-label="Close"
           >
             ✕
           </button>

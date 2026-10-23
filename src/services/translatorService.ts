@@ -196,7 +196,7 @@ class TranslatorService {
     if (this.isOnline && !options?.forceOffline) {
       try {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 14000); // 14s cancellable timeout
+        const timeout = setTimeout(() => controller.abort(), 30000); // 30s cancellable timeout
 
         const headers: Record<string, string> = { 'Content-Type': 'application/json' };
         const key = this.getApiKey();
@@ -273,6 +273,25 @@ class TranslatorService {
         }
       } catch (err: any) {
         const msg = String(err?.message || '');
+        if (err?.name === 'AbortError' || msg.includes('aborted') || msg.includes('timeout')) {
+          const phraseMatch = findInOfflinePhrasebook(trimmed, sourceLang, targetLang);
+          if (phraseMatch) {
+            return {
+              id,
+              originalText: trimmed,
+              translatedText: phraseMatch.text,
+              phoneticText: phraseMatch.phonetic,
+              sourceLang,
+              targetLang,
+              isOffline: true,
+              engine: 'offline-lexicon',
+              confidence: 1.0,
+              dialectNotes: 'नेटवर्क विलंब के कारण प्रामाणिक ऑफ़लाइन शब्दकोश से अनुवादित',
+              timestamp: Date.now(),
+            };
+          }
+          throw new Error('नेटवर्क विलंब: अनुवाद अनुरोध में अधिक समय लगा (Network Request Timed Out)। कृपया पुनः प्रयास करें।');
+        }
         if (
           msg.includes('Quota') ||
           msg.includes('429') ||
@@ -280,8 +299,7 @@ class TranslatorService {
           msg.includes('Network') ||
           msg.includes('नेटवर्क') ||
           msg.includes('Failed to fetch') ||
-          err?.name === 'TypeError' ||
-          err?.name === 'AbortError'
+          err?.name === 'TypeError'
         ) {
           throw err;
         }

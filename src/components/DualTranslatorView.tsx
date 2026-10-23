@@ -38,6 +38,7 @@ interface DualTranslatorViewProps {
   isMuted: boolean;
   onOpenPackManager?: () => void;
   onOpenWordLearning?: (word?: string, translation?: string) => void;
+  onOpenWordPrompt?: (text: string) => void;
 }
 
 interface StatusFeedback {
@@ -61,6 +62,7 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
   isMuted,
   onOpenPackManager,
   onOpenWordLearning,
+  onOpenWordPrompt,
 }) => {
   const { isDark } = useTheme();
 
@@ -277,10 +279,14 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
         raw.includes('fetch failed') ||
         raw.includes('TIMEOUT') ||
         raw.includes('timed out') ||
+        raw.includes('Timed Out') ||
         raw.includes('offline') ||
         raw.includes('Offline') ||
         raw.includes('Load failed') ||
         raw.includes('ECONNREFUSED') ||
+        raw.includes('aborted') ||
+        raw.includes('AbortError') ||
+        raw.includes('विलंब') ||
         lastSttErrorRef.current === 'network' ||
         (typeof navigator !== 'undefined' && !navigator.onLine));
 
@@ -369,6 +375,9 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
       });
     } else {
       let cleanMsg = raw;
+      if (cleanMsg.includes('aborted') || cleanMsg.includes('abort') || cleanMsg.includes('signal is aborted')) {
+        cleanMsg = 'नेटवर्क विलंब: अनुरोध में अधिक समय लगा (Network Request Timed Out). Please retry.';
+      }
       if (cleanMsg.includes('{"error":')) {
         try {
           const match = cleanMsg.match(/\{"error":.*\}/);
@@ -561,14 +570,16 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
       setConversationList((prev) => [msg, ...prev]);
       onNewMessage(msg);
       setStatusFeedback(null);
+      setIsProcessing(false);
+      setInterimText('');
+      setFinalText('');
 
-      // Playback if not muted
+      // Playback asynchronously if not muted without blocking UI interactions
       if (!isMuted) {
-        await playMessageAudio(msg);
+        playMessageAudio(msg).catch(() => {});
       }
     } catch (err: any) {
       handleTranslationError(err);
-    } finally {
       setIsProcessing(false);
       setInterimText('');
       setFinalText('');
@@ -654,13 +665,14 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
 
       if (speaker === 'A') setManualTextA('');
       else setManualTextB('');
+      setIsProcessing(false);
 
+      // Playback asynchronously without blocking UI interactions
       if (!isMuted) {
-        await playMessageAudio(msg);
+        playMessageAudio(msg).catch(() => {});
       }
     } catch (err: any) {
       handleTranslationError(err);
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -948,6 +960,7 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
         >
           {/* Speaker 1 Selector */}
           <button
+            data-testid="speaker1-lang-selector"
             onClick={() => setShowLangPicker('A')}
             disabled={activeSpeaker !== null || isProcessing}
             className={
@@ -979,6 +992,7 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
 
           {/* Speaker 2 Selector */}
           <button
+            data-testid="speaker2-lang-selector"
             onClick={() => setShowLangPicker('B')}
             disabled={activeSpeaker !== null || isProcessing}
             className={
@@ -1272,6 +1286,18 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
                     >
                       <Maximize2 className="w-3.5 h-3.5" />
                     </button>
+                    {onOpenWordPrompt && (
+                      <button
+                        onClick={() => {
+                          audioEngine.triggerHaptic(30);
+                          onOpenWordPrompt(item.originalText);
+                        }}
+                        className={`p-1 ${isDark ? 'hover:text-amber-300' : 'hover:text-amber-700'}`}
+                        title="नया बोली शब्द जोड़ें (Add word to Dialect dictionary)"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                      </button>
+                    )}
                   </div>
                 </div>
 

@@ -192,12 +192,13 @@ export const LanguagePackManagerModal: React.FC<LanguagePackManagerModalProps> =
 
           <button
             onClick={onClose}
+            data-testid="close-settings-btn"
+            aria-label="Close Settings"
             className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
               isDark
                 ? 'bg-zinc-800 text-zinc-400 hover:text-zinc-100'
                 : 'bg-white/90 text-slate-500 hover:text-slate-800 border border-slate-200/80 shadow-xs'
             }`}
-            aria-label="Close"
           >
             ✕
           </button>

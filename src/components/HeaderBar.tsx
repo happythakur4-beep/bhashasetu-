@@ -17,12 +17,14 @@ import {
   Activity,
   AlertCircle,
   Brain,
+  User,
 } from 'lucide-react';
 import { ChannelNumber, RadioChannel } from '../types';
 import { RADIO_CHANNELS } from '../services/languageRegistry';
 import { meshNetwork } from '../services/meshNetwork';
 import { peerMesh, PeerStatus } from '../services/peerMesh';
 import { useTheme } from '../context/ThemeContext';
+import { UserProfile } from '../services/authService';
 import { DiagnosticsModal } from './DiagnosticsModal';
 import { OnboardingModal } from './OnboardingModal';
 import { PWAInstallButton } from './PWAInstallButton';
@@ -37,6 +39,9 @@ interface HeaderBarProps {
   onOpenRadar?: () => void;
   onOpenSettings?: () => void;
   onOpenWordLearning?: () => void;
+  onOpenAuth?: () => void;
+  user?: UserProfile | null;
+  onTriggerWordPopup?: () => void;
 }
 
 export const HeaderBar: React.FC<HeaderBarProps> = ({
@@ -49,6 +54,9 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   onOpenRadar,
   onOpenSettings,
   onOpenWordLearning,
+  onOpenAuth,
+  user,
+  onTriggerWordPopup,
 }) => {
   const { isDark, toggleTheme } = useTheme();
   const [timeStr, setTimeStr] = useState('');
@@ -350,6 +358,55 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
 
         {/* Right Action Icons: Guide, Diagnostics, Theme, Mute, Radar */}
         <div className="flex items-center space-x-1.5 shrink-0">
+          {/* User Account / Profile Button (Google / Phone / Email) */}
+          {onOpenAuth && (
+            <button
+              onClick={onOpenAuth}
+              data-testid="header-auth-btn"
+              className={`p-1.5 rounded-lg border transition-colors flex items-center gap-1.5 text-xs font-mono ${
+                user
+                  ? isDark
+                    ? 'bg-purple-950/70 border-purple-700/80 text-purple-200 hover:bg-purple-900/70 shadow-xs'
+                    : 'bg-purple-100/90 border-purple-300 text-purple-950 hover:bg-purple-200 shadow-xs'
+                  : isDark
+                  ? 'bg-zinc-850 border-zinc-750 text-zinc-300 hover:bg-zinc-800'
+                  : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs'
+              }`}
+              title={user ? `अकाउंट: ${user.name} (${user.identifier})` : 'अकाउंट जोड़ें (Google, फ़ोन OTP, ई-मेल)'}
+            >
+              {user ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="font-bold text-[11px] truncate max-w-[80px] sm:max-w-none">
+                    {user.name.split(' ')[0]}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <User className="w-3.5 h-3.5 text-purple-400" />
+                  <span className="hidden sm:inline font-bold">लॉगिन</span>
+                </>
+              )}
+            </button>
+          )}
+
+          {/* Quick Dialect Word Learning Prompt Button */}
+          {onTriggerWordPopup && (
+            <button
+              onClick={onTriggerWordPopup}
+              data-testid="header-word-prompt-btn"
+              className={`p-1.5 rounded-lg border transition-colors flex items-center gap-1 text-xs font-mono ${
+                isDark
+                  ? 'bg-amber-950/40 border-amber-800/60 text-amber-300 hover:bg-amber-900/50'
+                  : 'bg-amber-50 border-amber-200 text-amber-900 hover:bg-amber-100 shadow-xs'
+              }`}
+              title="नया बोली शब्द जोड़ें (Add Dialect Word Prompt)"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden xl:inline">+ शब्द जोड़ें</span>
+            </button>
+          )}
+
           {/* Onboarding Guide Button */}
           <button
             onClick={() => setShowOnboarding(true)}

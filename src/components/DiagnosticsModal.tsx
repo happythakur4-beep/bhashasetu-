@@ -77,6 +77,8 @@ export const DiagnosticsModal: React.FC<DiagnosticsModalProps> = ({ isOpen, onCl
             </button>
             <button
               onClick={onClose}
+              data-testid="close-diagnostics-btn"
+              aria-label="Close Diagnostics"
               className="p-1.5 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors"
             >
               <X className="w-4 h-4" />

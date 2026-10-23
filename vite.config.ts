@@ -10,7 +10,7 @@ export default defineConfig(() => {
       react(),
       tailwindcss(),
       VitePWA({
-        registerType: 'autoUpdate',
+        registerType: 'prompt',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.svg'],
         manifest: {
           id: '/',
@@ -64,8 +64,7 @@ export default defineConfig(() => {
           ],
         },
         devOptions: {
-          enabled: true,
-          type: 'module',
+          enabled: false,
         },
       }),
     ],
@@ -75,8 +74,11 @@ export default defineConfig(() => {
       },
     },
     server: {
+      allowedHosts: true as const,
+      watch: {
+        ignored: ['**/test-bot-artifacts/**', '**/dev-dist/**', '**/dist/**', '**/.env*', '**/scripts/**'],
+      },
       hmr: process.env.DISABLE_HMR !== 'true',
-      watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
   };
 });

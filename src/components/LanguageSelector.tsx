@@ -109,6 +109,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
             return (
               <button
                 key={lang.code}
+                data-testid={`lang-option-${lang.code}`}
                 disabled={isExcluded}
                 onClick={() => {
                   onSelectLang(lang.code);

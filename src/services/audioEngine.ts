@@ -699,7 +699,7 @@ class AudioEngine {
   ): Promise<TranscribeResult> {
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 14000);
+      const timeout = setTimeout(() => controller.abort(), 30000);
 
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (typeof localStorage !== 'undefined') {

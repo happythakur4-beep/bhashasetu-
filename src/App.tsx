@@ -20,9 +20,13 @@ import { PhrasebookView } from './components/PhrasebookView';
 import { ConversationHistoryView } from './components/ConversationHistoryView';
 import { LanguagePackManagerModal } from './components/LanguagePackManagerModal';
 import { WordLearningModal } from './components/WordLearningModal';
+import { FrontPageAuthModal } from './components/FrontPageAuthModal';
+import { UnrecognizedWordPopup, UnrecognizedWordData } from './components/UnrecognizedWordPopup';
 import { audioEngine } from './services/audioEngine';
 import { translatorService } from './services/translatorService';
 import { meshNetwork } from './services/meshNetwork';
+import { authService, UserProfile } from './services/authService';
+import { customVocabularyService } from './services/customVocabularyService';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 
 export default function App() {
@@ -45,6 +49,14 @@ function AppContent() {
   const [showLanguagePacks, setShowLanguagePacks] = useState(false);
   const [showWordLearning, setShowWordLearning] = useState(false);
   const [wordLearningInitial, setWordLearningInitial] = useState<{ word?: string; translation?: string }>({});
+
+  // Front Page / Auth Portal state
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => authService.getCurrentUser());
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(() => authService.isFirstVisit() && !authService.getCurrentUser());
+
+  // Dialect / Missing Word Learning Popup state (हाँ / ना / ठीक-ठाक)
+  const [showUnrecognizedPopup, setShowUnrecognizedPopup] = useState(false);
+  const [unrecognizedWordData, setUnrecognizedWordData] = useState<UnrecognizedWordData | null>(null);
 
   // Conversation history initialized clean without fake seed bloat
   const [messages, setMessages] = useState<ConversationMessage[]>(() => {
@@ -88,6 +100,14 @@ function AppContent() {
     };
   }, []);
 
+  // Listen to Auth State
+  useEffect(() => {
+    const unsub = authService.subscribe((user) => {
+      setCurrentUser(user);
+    });
+    return unsub;
+  }, []);
+
   // Save messages to localStorage
   useEffect(() => {
     if (typeof localStorage !== 'undefined') {
@@ -102,6 +122,47 @@ function AppContent() {
   // Handle new message from PTT, Dual Translator, or Mesh Packet
   const handleNewMessage = (msg: ConversationMessage) => {
     setMessages((prev) => [msg, ...prev]);
+
+    // Check for potential unfamiliar/dialect words in spoken/typed text
+    if (msg.originalText) {
+      const candidates = customVocabularyService.detectPotentialNewWords(msg.originalText, msg.sourceLang);
+      if (candidates.length > 0) {
+        const detectedTerm = candidates[0];
+        // Trigger non-intrusive dialect learning prompt after 1.5s
+        setTimeout(() => {
+          setUnrecognizedWordData({
+            word: detectedTerm,
+            sourceLang: msg.sourceLang,
+            targetLang: msg.targetLang,
+            sentenceContext: msg.originalText,
+            suggestedMeaning: msg.translatedText ? msg.translatedText.slice(0, 50) : undefined,
+            suggestedPhonetic: msg.phoneticText ? msg.phoneticText.slice(0, 50) : undefined,
+          });
+          setShowUnrecognizedPopup(true);
+        }, 1500);
+      }
+    }
+  };
+
+  // Manual Trigger for Dialect Word Learning Popup (हाँ / ना / ठीक-ठाक)
+  const handleTriggerWordPrompt = (wordOverride?: string) => {
+    const word = wordOverride || (targetLang === 'mjl' ? 'ऐन्सा' : targetLang === 'or' ? 'ଖାସ୍‌କରି' : 'खाड्डा');
+    const meaning =
+      targetLang === 'mjl'
+        ? 'ऐसा / इस तरह (Like this - Mandali Pahadi)'
+        : targetLang === 'or'
+        ? 'विशेष रूप से (Specifically - Odia)'
+        : 'गड्ढा या खांचा (Ditch / Cavity)';
+
+    setUnrecognizedWordData({
+      word,
+      sourceLang: targetLang,
+      targetLang: sourceLang,
+      suggestedMeaning: meaning,
+      suggestedPhonetic: word === 'ऐन्सा' ? 'Ainsa' : word === 'ଖାସ୍‌କରି' ? 'Khaskari' : 'Khadda',
+      sentenceContext: 'यह शब्द भाषा/बोली में नया पाया गया (Regional term detected)',
+    });
+    setShowUnrecognizedPopup(true);
   };
 
   // Change Channel
@@ -155,6 +216,9 @@ function AppContent() {
           setWordLearningInitial({});
           setShowWordLearning(true);
         }}
+        onOpenAuth={() => setShowAuthModal(true)}
+        user={currentUser}
+        onTriggerWordPopup={() => handleTriggerWordPrompt()}
       />
 
       {/* Main View Area */}
@@ -175,6 +239,7 @@ function AppContent() {
               setWordLearningInitial({ word, translation });
               setShowWordLearning(true);
             }}
+            onOpenWordPrompt={(text) => handleTriggerWordPrompt(text)}
           />
         )}
 
@@ -191,6 +256,7 @@ function AppContent() {
               setWordLearningInitial({ word, translation });
               setShowWordLearning(true);
             }}
+            onOpenWordPrompt={(text) => handleTriggerWordPrompt(text)}
           />
         )}
 
@@ -244,6 +310,24 @@ function AppContent() {
         initialTranslation={wordLearningInitial.translation}
         sourceLang={sourceLang}
         targetLang={targetLang}
+      />
+
+      {/* Front Page / Account Linking & Verification Portal */}
+      <FrontPageAuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        currentUser={currentUser}
+        onUserChanged={(user) => setCurrentUser(user)}
+      />
+
+      {/* Dialect / Missing Word Learning Popup (हाँ / ना / ठीक-ठाक) */}
+      <UnrecognizedWordPopup
+        isOpen={showUnrecognizedPopup}
+        data={unrecognizedWordData}
+        onClose={() => setShowUnrecognizedPopup(false)}
+        onWordAdded={(word, meaning) => {
+          console.log(`[LearnedWord Added] "${word}" -> "${meaning}"`);
+        }}
       />
     </div>
   );

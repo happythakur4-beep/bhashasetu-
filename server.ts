@@ -94,15 +94,16 @@ function getAI(customKey?: string): { ai: GoogleGenAI | null; key: string } {
 }
 
 // Configurable model identifiers with reliable defaults & high-availability fallback chains
+// gemini-3.5-flash-lite provides sub-second (<1s) conversational response times; gemini-3.8-flash serves as fallback
 const TRANSLATE_MODELS = [
-  process.env.GEMINI_TRANSLATE_MODEL || 'gemini-3.8-flash',
-  'gemini-3.5-flash-lite',
+  process.env.GEMINI_TRANSLATE_MODEL || 'gemini-3.5-flash-lite',
+  'gemini-3.8-flash',
 ];
 const TRANSLATE_MODEL = TRANSLATE_MODELS[0];
 
 const TRANSCRIBE_MODELS = [
-  process.env.GEMINI_TRANSCRIBE_MODEL || 'gemini-3.8-flash',
-  'gemini-3.5-flash-lite',
+  process.env.GEMINI_TRANSCRIBE_MODEL || 'gemini-3.5-flash-lite',
+  'gemini-3.8-flash',
 ];
 const TRANSCRIBE_MODEL = TRANSCRIBE_MODELS[0];
 
@@ -416,7 +417,7 @@ Respond ONLY with a valid JSON object matching this schema:
     for (const candidateModel of TRANSLATE_MODELS) {
       for (let attempt = 0; attempt < 2; attempt++) {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 9000); // 9s timeout per candidate model
+        const timeout = setTimeout(() => controller.abort(), 18000); // 18s timeout per candidate model
 
         try {
           response = await ai.models.generateContent({

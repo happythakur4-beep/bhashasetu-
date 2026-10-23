@@ -2,7 +2,11 @@ node_modules/
 build/
 dist/
 dev-dist/
+release/
+android/app/build/
+ios/App/App/public/
 coverage/
+test-bot-artifacts/
 .DS_Store
 *.log
 .env*

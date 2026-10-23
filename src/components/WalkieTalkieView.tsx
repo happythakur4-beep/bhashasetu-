@@ -62,6 +62,7 @@ interface WalkieTalkieViewProps {
   onOpenDialectGuide?: () => void;
   onOpenPackManager?: () => void;
   onOpenWordLearning?: (word?: string, translation?: string) => void;
+  onOpenWordPrompt?: (text: string) => void;
 }
 
 export const WalkieTalkieView: React.FC<WalkieTalkieViewProps> = ({
@@ -77,6 +78,7 @@ export const WalkieTalkieView: React.FC<WalkieTalkieViewProps> = ({
   onOpenDialectGuide,
   onOpenPackManager,
   onOpenWordLearning,
+  onOpenWordPrompt,
 }) => {
   const { isDark } = useTheme();
   const [isPressingPTT, setIsPressingPTT] = useState(false);
@@ -302,6 +304,9 @@ export const WalkieTalkieView: React.FC<WalkieTalkieViewProps> = ({
     }
 
     let cleanMsg = raw || 'Translation request could not be completed.';
+    if (cleanMsg.includes('aborted') || cleanMsg.includes('abort') || cleanMsg.includes('signal is aborted')) {
+      cleanMsg = 'नेटवर्क विलंब: अनुरोध में अधिक समय लगा (Network Request Timed Out). Please retry.';
+    }
     if (cleanMsg.includes('{"error":')) {
       try {
         const match = cleanMsg.match(/\{"error":.*\}/);
@@ -1446,10 +1451,11 @@ export const WalkieTalkieView: React.FC<WalkieTalkieViewProps> = ({
                       </span>
                     </div>
                     <button
-                      onClick={() => onOpenWordLearning?.(word, latestTransmission.translatedText)}
+                      onClick={() => (onOpenWordPrompt ? onOpenWordPrompt(word) : onOpenWordLearning?.(word, latestTransmission.translatedText))}
+                      data-testid="walkie-word-prompt-btn"
                       className="px-2.5 py-1 rounded-lg bg-purple-700 hover:bg-purple-800 text-white font-bold text-[11px] shrink-0 shadow-xs transition-all"
                     >
-                      Confirm &amp; Learn Pop-up
+                      + बोली में जोड़ें (Add Word)
                     </button>
                   </div>
                 );

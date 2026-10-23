@@ -35,6 +35,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
           </div>
           <button
             onClick={onClose}
+            data-testid="close-onboarding-btn"
+            aria-label="Close Onboarding Guide"
             className="p-1.5 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors"
           >
             <X className="w-4 h-4" />
