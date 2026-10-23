@@ -1010,12 +1010,46 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
         >
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-red-400" />
+              {statusFeedback.type === 'info' ? (
+                <Info className="w-4 h-4 shrink-0 mt-0.5 text-sky-400" />
+              ) : statusFeedback.type === 'warning' ? (
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-red-400" />
+              )}
               <div className="space-y-1">
-                <div className="font-bold text-sm text-red-300">{statusFeedback.titleHi}</div>
-                <div className="text-xs font-semibold text-red-200">{statusFeedback.titleEn}</div>
+                <div
+                  className={`font-bold text-sm ${
+                    statusFeedback.type === 'info'
+                      ? 'text-sky-300'
+                      : statusFeedback.type === 'warning'
+                      ? 'text-amber-300'
+                      : 'text-red-300'
+                  }`}
+                >
+                  {statusFeedback.titleHi}
+                </div>
+                <div
+                  className={`text-xs font-semibold ${
+                    statusFeedback.type === 'info'
+                      ? 'text-sky-200'
+                      : statusFeedback.type === 'warning'
+                      ? 'text-amber-200'
+                      : 'text-red-200'
+                  }`}
+                >
+                  {statusFeedback.titleEn}
+                </div>
                 {statusFeedback.details && (
-                  <div className="text-[11px] font-medium opacity-90 leading-relaxed bg-black/30 p-2 rounded-lg border border-red-500/20">
+                  <div
+                    className={`text-[11px] font-medium opacity-90 leading-relaxed bg-black/30 p-2 rounded-lg border ${
+                      statusFeedback.type === 'info'
+                        ? 'border-sky-500/20 text-sky-100'
+                        : statusFeedback.type === 'warning'
+                        ? 'border-amber-500/20 text-amber-100'
+                        : 'border-red-500/20 text-red-100'
+                    }`}
+                  >
                     {statusFeedback.details}
                   </div>
                 )}
