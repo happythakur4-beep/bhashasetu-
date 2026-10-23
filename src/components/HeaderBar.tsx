@@ -378,6 +378,20 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
             </button>
           )}
 
+          {/* Tactical Mesh Radar Map Button */}
+          {onOpenRadar && (
+            <button
+              onClick={onOpenRadar}
+              className={`p-1.5 rounded-lg border transition-colors flex items-center gap-1 text-xs font-mono ${
+                isDark ? 'bg-zinc-850 border-zinc-750 text-cyan-400 hover:bg-zinc-800' : 'bg-white border-slate-200 text-cyan-700 shadow-xs'
+              }`}
+              title="Tactical Mesh Radar Map"
+            >
+              <Radio className="w-4 h-4 text-cyan-400" />
+              <span className="hidden lg:inline">Radar</span>
+            </button>
+          )}
+
           {/* Install PWA Button */}
           <PWAInstallButton variant="compact" />
 

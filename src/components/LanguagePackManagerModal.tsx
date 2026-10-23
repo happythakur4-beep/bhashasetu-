@@ -20,6 +20,8 @@ import {
   Shield,
   Flame,
   Zap,
+  Key,
+  Lock,
 } from 'lucide-react';
 import {
   languagePackService,
@@ -28,6 +30,7 @@ import {
 } from '../services/languagePackService';
 import { useTheme } from '../context/ThemeContext';
 import { audioEngine, OFFLINE_VOICE_PERSONAS } from '../services/audioEngine';
+import { translatorService } from '../services/translatorService';
 
 interface LanguagePackManagerModalProps {
   isOpen: boolean;
@@ -45,6 +48,30 @@ export const LanguagePackManagerModal: React.FC<LanguagePackManagerModalProps> =
   const [playingPackId, setPlayingPackId] = useState<string | null>(null);
   const [playingPersonaId, setPlayingPersonaId] = useState<string | null>(null);
   const [systemVoices, setSystemVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [customApiKey, setCustomApiKey] = useState(translatorService.getApiKey());
+  const [showKeyText, setShowKeyText] = useState(false);
+  const [keySaved, setKeySaved] = useState(false);
+  const [isTestingKey, setIsTestingKey] = useState(false);
+  const [keyStatusMessage, setKeyStatusMessage] = useState<string | null>(null);
+
+  const handleSaveApiKey = async () => {
+    setIsTestingKey(true);
+    setKeyStatusMessage(null);
+    try {
+      const isHealthy = await translatorService.setApiKey(customApiKey);
+      setKeySaved(true);
+      if (isHealthy) {
+        setKeyStatusMessage('API Key active & connected to server!');
+      } else {
+        setKeyStatusMessage('API Key updated.');
+      }
+      setTimeout(() => setKeySaved(false), 3000);
+    } catch (e: any) {
+      setKeyStatusMessage('Failed to save key: ' + (e?.message || e));
+    } finally {
+      setIsTestingKey(false);
+    }
+  };
 
   useEffect(() => {
     const unsubscribe = languagePackService.subscribe((updatedPacks, updatedPrefs) => {
@@ -604,6 +631,63 @@ export const LanguagePackManagerModal: React.FC<LanguagePackManagerModalProps> =
                 <p className={`text-[11px] font-mono leading-relaxed ${isDark ? 'text-zinc-400' : 'text-slate-700 font-medium'}`}>
                   Toggles in this section control cloud-based AI services that consume daily credit quota. Toggling these OFF saves API credits while leaving all free offline features unaffected.
                 </p>
+
+                {/* Gemini API Key Configuration */}
+                <div className="border-t border-purple-800/30 dark:border-purple-800/60 pt-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Key className="w-3.5 h-3.5 text-purple-400" />
+                      <h5 className={`text-xs font-bold font-mono ${isDark ? 'text-zinc-100' : 'text-slate-900'}`}>
+                        Google Gemini API Key
+                      </h5>
+                    </div>
+                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${
+                      customApiKey
+                        ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
+                        : 'bg-amber-950 text-amber-300 border border-amber-800'
+                    }`}>
+                      {customApiKey ? 'Key Configured' : 'Offline Lexicon Only'}
+                    </span>
+                  </div>
+                  <p className={`text-[11px] font-mono ${isDark ? 'text-zinc-400' : 'text-slate-600'}`}>
+                    Enter your Gemini API key (starts with AIza) for real-time transcription and generative voice.
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type={showKeyText ? 'text' : 'password'}
+                        value={customApiKey}
+                        onChange={(e) => setCustomApiKey(e.target.value)}
+                        placeholder="AIzaSy..."
+                        className={`w-full text-xs font-mono px-3 py-1.5 rounded-lg border focus:outline-none focus:ring-1 focus:ring-purple-500 ${
+                          isDark
+                            ? 'bg-zinc-900 border-zinc-700 text-zinc-100 placeholder-zinc-500'
+                            : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowKeyText(!showKeyText)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-zinc-400 hover:text-zinc-200 font-mono"
+                      >
+                        {showKeyText ? 'Hide' : 'Show'}
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSaveApiKey}
+                      disabled={isTestingKey}
+                      className="px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-purple-600 hover:bg-purple-500 text-white transition-all disabled:opacity-50 shrink-0"
+                    >
+                      {isTestingKey ? 'Verifying...' : keySaved ? 'Saved ✓' : 'Save Key'}
+                    </button>
+                  </div>
+                  {keyStatusMessage && (
+                    <p className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> {keyStatusMessage}
+                    </p>
+                  )}
+                </div>
 
                 {/* Cloud Gemini Neural Translation Toggle */}
                 <div className="border-t border-purple-800/30 dark:border-purple-800/60 pt-3 flex items-center justify-between">

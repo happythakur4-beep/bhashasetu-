@@ -1,5 +1,5 @@
 import React from 'react';
-import { Radio, ArrowRightLeft, BookOpen, Clock } from 'lucide-react';
+import { Radio, ArrowRightLeft, BookOpen, Clock, Compass } from 'lucide-react';
 import { AppViewMode } from '../types';
 import { audioEngine } from '../services/audioEngine';
 import { useTheme } from '../context/ThemeContext';
@@ -29,6 +29,12 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
       label: 'Dual Talk',
       sub: 'Face-to-Face',
       icon: ArrowRightLeft,
+    },
+    {
+      id: 'mesh_radar' as AppViewMode,
+      label: 'Radar Map',
+      sub: 'Mesh Nodes',
+      icon: Compass,
     },
     {
       id: 'phrasebook' as AppViewMode,

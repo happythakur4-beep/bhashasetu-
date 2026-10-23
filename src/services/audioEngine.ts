@@ -701,9 +701,15 @@ class AudioEngine {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 14000);
 
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (typeof localStorage !== 'undefined') {
+        const clientKey = localStorage.getItem('bhashasetu_gemini_api_key');
+        if (clientKey) headers['x-gemini-api-key'] = clientKey;
+      }
+
       const res = await fetch('/api/transcribe', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           audio: audioDataUri,
           language,

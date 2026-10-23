@@ -15,6 +15,7 @@ import { HeaderBar } from './components/HeaderBar';
 import { BottomNavigation } from './components/BottomNavigation';
 import { WalkieTalkieView } from './components/WalkieTalkieView';
 import { DualTranslatorView } from './components/DualTranslatorView';
+import { TacticalMeshMap } from './components/TacticalMeshMap';
 import { PhrasebookView } from './components/PhrasebookView';
 import { ConversationHistoryView } from './components/ConversationHistoryView';
 import { LanguagePackManagerModal } from './components/LanguagePackManagerModal';
@@ -137,6 +138,7 @@ function AppContent() {
           setIsMuted(!isMuted);
           if (!isMuted) audioEngine.stopSpeaking();
         }}
+        onOpenRadar={() => setCurrentMode('mesh_radar')}
         onOpenSettings={() => setShowLanguagePacks(true)}
         onOpenWordLearning={() => {
           setWordLearningInitial({});
@@ -178,6 +180,12 @@ function AppContent() {
               setWordLearningInitial({ word, translation });
               setShowWordLearning(true);
             }}
+          />
+        )}
+
+        {currentMode === 'mesh_radar' && (
+          <TacticalMeshMap
+            onSelectPeerToTalk={handleSelectPeerToTalk}
           />
         )}
 

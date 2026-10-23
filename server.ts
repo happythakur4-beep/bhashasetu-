@@ -25,8 +25,13 @@ const port = process.env.PORT || 3000;
 
 app.use(express.json({ limit: '20mb' }));
 
-const apiKey = process.env.GEMINI_API_KEY || '';
-const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+let serverApiKey = process.env.GEMINI_API_KEY || '';
+
+function getAI(customKey?: string): { ai: GoogleGenAI | null; key: string } {
+  const effectiveKey = (customKey && customKey.trim()) || serverApiKey;
+  if (!effectiveKey) return { ai: null, key: '' };
+  return { ai: new GoogleGenAI({ apiKey: effectiveKey }), key: effectiveKey };
+}
 
 // Configurable model identifiers with reliable defaults
 const TRANSLATE_MODEL = process.env.GEMINI_TRANSLATE_MODEL || 'gemini-3.8-flash';
@@ -44,8 +49,9 @@ apiQuotaTracker.setModels({
 export { getHonestOfflineTranslation, langNames };
 
 // Helper: Synthesize real Gemini TTS audio for translated text
-async function generateGeminiTTS(text: string, voiceName: string = 'Kore'): Promise<string | null> {
-  if (!ai || !apiKey || !text.trim()) return null;
+async function generateGeminiTTS(text: string, voiceName: string = 'Kore', customKey?: string): Promise<string | null> {
+  const { ai, key } = getAI(customKey);
+  if (!ai || !key || !text.trim()) return null;
   try {
     const response = await ai.models.generateContent({
       model: TTS_MODEL,
@@ -81,7 +87,10 @@ app.post('/api/transcribe', async (req, res) => {
     return res.status(400).json({ success: false, error: 'Missing required audio data' });
   }
 
-  if (!ai || !apiKey) {
+  const clientKey = (req.headers['x-gemini-api-key'] as string) || req.body?.apiKey;
+  const { ai, key } = getAI(clientKey);
+
+  if (!ai || !key) {
     return res.status(503).json({
       success: false,
       transcript: '',
@@ -168,7 +177,10 @@ app.post('/api/tts', async (req, res) => {
     return res.status(400).json({ success: false, error: 'Missing text parameter' });
   }
 
-  if (!ai || !apiKey) {
+  const clientKey = (req.headers['x-gemini-api-key'] as string) || req.body?.apiKey;
+  const { ai, key } = getAI(clientKey);
+
+  if (!ai || !key) {
     return res.status(503).json({
       success: false,
       error: 'GEMINI_API_KEY is not configured on the server.',
@@ -177,7 +189,7 @@ app.post('/api/tts', async (req, res) => {
   }
 
   try {
-    const audioBase64 = await generateGeminiTTS(text, voiceName || 'Kore');
+    const audioBase64 = await generateGeminiTTS(text, voiceName || 'Kore', key);
     if (audioBase64) {
       apiQuotaTracker.recordRequest('tts', true);
       return res.json({
@@ -216,8 +228,11 @@ app.post('/api/translate', async (req, res) => {
   const sourceName = langNames[sourceLang] || sourceLang;
   const targetName = langNames[targetLang] || targetLang;
 
+  const clientKey = (req.headers['x-gemini-api-key'] as string) || req.body?.apiKey;
+  const { ai, key } = getAI(clientKey);
+
   // If Gemini key is not configured, fall back honestly
-  if (!ai || !apiKey) {
+  if (!ai || !key) {
     apiQuotaTracker.recordOfflineFallback();
     const offlineResult = getHonestOfflineTranslation(text, sourceLang, targetLang);
     if (offlineResult.success) {
@@ -299,7 +314,7 @@ Respond ONLY with a valid JSON object matching this schema:
         msg.includes('exceeded your current quota') ||
         msg.includes('aborted') ||
         primaryErr?.name === 'AbortError' ||
-        apiQuotaTracker.getSummary(Boolean(apiKey)).quotaStatus === 'quota_exceeded';
+        apiQuotaTracker.getSummary(Boolean(key)).quotaStatus === 'quota_exceeded';
 
       if (isQuota) {
         apiQuotaTracker.recordRequest('translate', false, true);
@@ -365,7 +380,7 @@ Respond ONLY with a valid JSON object matching this schema:
     // Synthesize real translated speech WAV via Gemini TTS if requested or enabled
     let ttsAudioBase64: string | null = null;
     if (includeTTS !== false && parsedData?.translatedText) {
-      ttsAudioBase64 = await generateGeminiTTS(parsedData.translatedText);
+      ttsAudioBase64 = await generateGeminiTTS(parsedData.translatedText, 'Kore', key);
     }
 
     apiQuotaTracker.recordRequest('translate', true);
@@ -401,11 +416,13 @@ Respond ONLY with a valid JSON object matching this schema:
 });
 
 // 4. Server Diagnostics & Health check endpoint
-app.get('/api/health', (_req, res) => {
+app.get('/api/health', (req, res) => {
+  const clientKey = (req.headers['x-gemini-api-key'] as string) || '';
+  const { key } = getAI(clientKey);
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    hasGeminiKey: Boolean(apiKey),
+    hasGeminiKey: Boolean(key),
     models: {
       translate: TRANSLATE_MODEL,
       transcribe: TRANSCRIBE_MODEL,
@@ -416,15 +433,27 @@ app.get('/api/health', (_req, res) => {
       activeRooms: roomRelay.getRoomsCount(),
       totalConnectedPeers: roomRelay.getTotalPeersCount(),
     },
-    quota: apiQuotaTracker.getSummary(Boolean(apiKey)),
+    quota: apiQuotaTracker.getSummary(Boolean(key)),
     appUrl: process.env.APP_URL || '',
     version: '2.0.0',
   });
 });
 
 // 4b. Real-time API Quota Consumption Endpoint
-app.get('/api/quota', (_req, res) => {
-  res.json(apiQuotaTracker.getSummary(Boolean(apiKey)));
+app.get('/api/quota', (req, res) => {
+  const clientKey = (req.headers['x-gemini-api-key'] as string) || '';
+  const { key } = getAI(clientKey);
+  res.json(apiQuotaTracker.getSummary(Boolean(key)));
+});
+
+// 4c. Runtime Key Configuration Endpoint (Allows setting key from UI without server restart)
+app.post('/api/key', (req, res) => {
+  const { apiKey } = req.body || {};
+  if (typeof apiKey === 'string') {
+    serverApiKey = apiKey.trim();
+    return res.json({ success: true, hasGeminiKey: Boolean(serverApiKey) });
+  }
+  return res.status(400).json({ success: false, error: 'Invalid apiKey parameter' });
 });
 
 // ==============================================================================
@@ -472,10 +501,18 @@ const heartbeatInterval = setInterval(() => {
 heartbeatInterval.unref();
 
 // Gemini Live API WebSocket Handler
-liveWss.on('connection', async (clientWs: WebSocket) => {
+liveWss.on('connection', async (clientWs: WebSocket, request: http.IncomingMessage) => {
   console.log('Gemini Live API client connected to /live');
 
-  if (!ai || !apiKey) {
+  let clientKey = '';
+  try {
+    const url = new URL(request?.url || '', `http://${request?.headers?.host || 'localhost'}`);
+    clientKey = url.searchParams.get('key') || '';
+  } catch {}
+
+  const { ai, key } = getAI(clientKey);
+
+  if (!ai || !key) {
     clientWs.send(JSON.stringify({
       type: 'error',
       message: 'GEMINI_API_KEY is not configured on the server.',

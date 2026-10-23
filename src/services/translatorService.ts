@@ -20,14 +20,53 @@ class TranslatorService {
       window.addEventListener('offline', () => {
         this.isOnline = false;
       });
+      // Synchronize client key with server on startup if present
+      const clientKey = this.getApiKey();
+      if (clientKey) {
+        this.syncKeyToServer(clientKey);
+      }
       this.checkServerHealth();
     }
+  }
+
+  public getApiKey(): string {
+    if (typeof localStorage !== 'undefined') {
+      return localStorage.getItem('bhashasetu_gemini_api_key') || '';
+    }
+    return '';
+  }
+
+  public async setApiKey(key: string): Promise<boolean> {
+    const trimmed = key.trim();
+    if (typeof localStorage !== 'undefined') {
+      if (trimmed) {
+        localStorage.setItem('bhashasetu_gemini_api_key', trimmed);
+      } else {
+        localStorage.removeItem('bhashasetu_gemini_api_key');
+      }
+    }
+    await this.syncKeyToServer(trimmed);
+    return await this.checkServerHealth();
+  }
+
+  private async syncKeyToServer(key: string): Promise<void> {
+    try {
+      await fetch('/api/key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey: key }),
+      });
+    } catch {}
   }
 
   // Periodic or initial check if Gemini is configured on server
   public async checkServerHealth(): Promise<boolean> {
     try {
-      const res = await fetch('/api/health');
+      const headers: Record<string, string> = {};
+      const key = this.getApiKey();
+      if (key) headers['x-gemini-api-key'] = key;
+
+      const res = await fetch('/api/health', { headers });
       if (!res.ok) throw new Error('Health check failed');
       const data = await res.json();
       this.hasServerGemini = Boolean(data.hasGeminiKey);
@@ -138,9 +177,13 @@ class TranslatorService {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 14000); // 14s cancellable timeout
 
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        const key = this.getApiKey();
+        if (key) headers['x-gemini-api-key'] = key;
+
         const res = await fetch('/api/translate', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({
             text: trimmed,
             sourceLang,

@@ -764,6 +764,168 @@ export const OFFLINE_PHRASEBOOK: PhraseItem[] = [
     },
     icon: 'Smile',
   },
+  {
+    id: 'fuel_1',
+    category: 'travel',
+    english: 'Where is the nearest petrol pump or fuel station?',
+    hindi: {
+      text: 'नजदीकी पेट्रोल पंप कहाँ है?',
+      phonetic: 'Nazdeeki petrol pump kahan hai?',
+    },
+    odia: {
+      text: 'ପାଖ ପେଟ୍ରୋଲ ପମ୍ପ କେଉଁଠି ଅଛି?',
+      phonetic: 'Pakha petrol pump keunthi achhi?',
+    },
+    mandali: {
+      text: 'नेड़ला पेट्रोल पंप कुथु है?',
+      phonetic: 'Nedla petrol pump kuthu hai?',
+    },
+    icon: 'Fuel',
+  },
+  {
+    id: 'hospital_1',
+    category: 'medical',
+    english: 'Where is the nearest government hospital or clinic?',
+    hindi: {
+      text: 'नजदीकी सरकारी अस्पताल कहाँ है?',
+      phonetic: 'Nazdeeki sarkari aspatal kahan hai?',
+    },
+    odia: {
+      text: 'ନିକଟତମ ସରକାରୀ ଡାକ୍ତରଖାନା କେଉଁଠାରେ ଅଛି?',
+      phonetic: 'Nikatatama sarakari daktarakhana keunthare achhi?',
+    },
+    mandali: {
+      text: 'नेड़ला सरकारी हस्पताल कुथु है?',
+      phonetic: 'Nedla sarkari haspatal kuthu hai?',
+    },
+    icon: 'Building2',
+  },
+  {
+    id: 'police_1',
+    category: 'emergency',
+    english: 'Where is the nearest police station or check post?',
+    hindi: {
+      text: 'नजदीकी पुलिस स्टेशन या चेक पोस्ट कहाँ है?',
+      phonetic: 'Nazdeeki police station ya check post kahan hai?',
+    },
+    odia: {
+      text: 'ନିକଟତମ ପୋଲିସ ଷ୍ଟେସନ କେଉଁଠାରେ?',
+      phonetic: 'Nikatatama police station keunthare?',
+    },
+    mandali: {
+      text: 'नेड़ला पुलिस थाणा या चौकी कुथु है?',
+      phonetic: 'Nedla police thana ya chowki kuthu hai?',
+    },
+    icon: 'ShieldAlert',
+  },
+  {
+    id: 'weather_1',
+    category: 'travel',
+    english: 'Is the road blocked due to landslide or heavy rain?',
+    hindi: {
+      text: 'क्या लैंडस्लाइड या बारिश से रास्ता बंद है?',
+      phonetic: 'Kya landslide ya baarish se rasta band hai?',
+    },
+    odia: {
+      text: 'ଭୂସ୍ଖଳନ କିମ୍ବା ବର୍ଷା ଯୋଗୁଁ ରାସ୍ତା ବନ୍ଦ ଅଛି କି?',
+      phonetic: 'Bhuskhlana kimba barsha jogun rasta banda achhi ki?',
+    },
+    mandali: {
+      text: 'के ढंगा / लैंडस्लाइड या बखा री वज्हा से रस्ता बंद है?',
+      phonetic: 'Ke dhanga / landslide ya bakha ri vajha se rasta band hai?',
+    },
+    icon: 'CloudRain',
+  },
+  {
+    id: 'mechanic_1',
+    category: 'travel',
+    english: 'My vehicle broke down, is there a mechanic nearby?',
+    hindi: {
+      text: 'मेरी गाड़ी खराब हो गई है, क्या पास में मैकेनिक मिलेगा?',
+      phonetic: 'Meri gaadi kharab ho gayi hai, kya paas mein mechanic milega?',
+    },
+    odia: {
+      text: 'ମୋ ଗାଡ଼ି ଖରାପ ହୋଇଯାଇଛି, ପାଖରେ ମେକାନିକ ମିଳିବେ କି?',
+      phonetic: 'Mo gadi kharap hoijaichhi, pakhare mechanic milibe ki?',
+    },
+    mandali: {
+      text: 'म्हारी गाड़ी खराब होयी गी, के नेड़े मिस्त्री मिलणा?',
+      phonetic: 'Mhari gaadi kharab hoyi gee, ke nede mistri milna?',
+    },
+    icon: 'Wrench',
+  },
+  {
+    id: 'hotel_1',
+    category: 'travel',
+    english: 'Is there a shelter or place to stay for the night?',
+    hindi: {
+      text: 'क्या यहाँ रात में रुकने की कोई जगह या सराय है?',
+      phonetic: 'Kya yahan raat mein rukne ki koi jagah ya saraye hai?',
+    },
+    odia: {
+      text: 'ରାତିରେ ରହିବା ପାଇଁ କୌଣସି ଆଶ୍ରୟ ବା ହୋଟେଲ ଅଛି କି?',
+      phonetic: 'Ratire rahiba pain kounasi aasraya ba hotel achhi ki?',
+    },
+    mandali: {
+      text: 'के इथी राता जो रौहणे दी कोई जगह या सरां है?',
+      phonetic: 'Ke ithi raata jo rauhne dee koi jagah ya saraa hai?',
+    },
+    icon: 'Home',
+  },
+  {
+    id: 'bus_time_1',
+    category: 'directions',
+    english: 'What time will the next bus arrive?',
+    hindi: {
+      text: 'अगली बस कितने बजे आएगी?',
+      phonetic: 'Agli bus kitne baje aayegi?',
+    },
+    odia: {
+      text: 'ପରବର୍ତ୍ତୀ ବସ କେତେବେଳେ ଆସିବ?',
+      phonetic: 'Parabartti bus ketebela aasiba?',
+    },
+    mandali: {
+      text: 'अगली बस केतड़े बजे औणी?',
+      phonetic: 'Agli bus ketde baje auni?',
+    },
+    icon: 'Clock',
+  },
+  {
+    id: 'safe_allclear',
+    category: 'emergency',
+    english: 'All clear, the area is safe now.',
+    hindi: {
+      text: 'सब ठीक है, इलाका सुरक्षित है।',
+      phonetic: 'Sab theek hai, ilaaka surakshit hai.',
+    },
+    odia: {
+      text: 'ସବୁ ଠିକ ଅଛି, ଅଞ୍ଚଳ ଏବେ ସୁରକ୍ଷିତ।',
+      phonetic: 'Sabu thik achhi, anchala ebe surakshita.',
+    },
+    mandali: {
+      text: 'सब राजी-खुशी है, इलाका महफूज है।',
+      phonetic: 'Sab raaji-khushi hai, ilaaka mehfooz hai.',
+    },
+    icon: 'CheckCircle',
+  },
+  {
+    id: 'food_meal',
+    category: 'food',
+    english: 'Is fresh food and tea available here?',
+    hindi: {
+      text: 'क्या यहाँ ताजा खाना और चाय मिलेगी?',
+      phonetic: 'Kya yahan taaza khana aur chai milegi?',
+    },
+    odia: {
+      text: 'ଏଠାରେ ତାଜା ଖାଦ୍ୟ ଏବଂ ଚାହା ମିଳିବ କି?',
+      phonetic: 'Ethare taja khadya ebam chaha miliba ki?',
+    },
+    mandali: {
+      text: 'के इथी ताजा रोटी ते चाह मिलणी?',
+      phonetic: 'Ke ithi taaja roti te chaah milni?',
+    },
+    icon: 'Coffee',
+  },
 ];
 
 // Offline Mandali Dialect Transformation Rules (Himachali / Mandeali Pahadi grammar)
@@ -798,6 +960,11 @@ export function applyMandaliDialectRules(hindiText: string): { text: string; pho
     'रुको': 'खड़ो',
     'यहाँ आओ': 'इथी आओ / इथी आ',
     'वहाँ जाओ': 'तिथी जा',
+    'नजदीकी पेट्रोल पंप कहाँ है?': 'नेड़ला पेट्रोल पंप कुथु है?',
+    'नजदीकी अस्पताल कहाँ है?': 'नेड़ला हस्पताल कुथु है?',
+    'नजदीकी पुलिस स्टेशन कहाँ है?': 'नेड़ला पुलिस थाणा कुथु है?',
+    'सब ठीक है': 'सब राजी-खुशी है',
+    'सब ठीक है।': 'सब राजी-खुशी है।',
   };
 
   for (const [hi, mjl] of Object.entries(directMap)) {
@@ -897,6 +1064,11 @@ export function applyReverseMandaliRules(mandaliText: string): { text: string; p
     'मां जो नी पता': 'मुझे नहीं पता',
     'हौं ठीक हां': 'मैं ठीक हूँ',
     'अस्सां ठीक हां': 'हम ठीक हैं',
+    'नेड़ला पेट्रोल पंप कुथु है?': 'नजदीकी पेट्रोल पंप कहाँ है?',
+    'नेड़ला हस्पताल कुथु है?': 'नजदीकी अस्पताल कहाँ है?',
+    'नेड़ला पुलिस थाणा कुथु है?': 'नजदीकी पुलिस स्टेशन कहाँ है?',
+    'सब राजी-खुशी है': 'सब ठीक है',
+    'सब राजी-खुशी है।': 'सब ठीक है।',
   };
 
   for (const [mjl, hi] of Object.entries(directReverseMap)) {
