@@ -11,12 +11,14 @@ import {
   BarChart2,
   ChevronDown,
   ChevronUp,
+  Maximize2,
 } from 'lucide-react';
 import { ConversationMessage } from '../types';
 import { audioEngine } from '../services/audioEngine';
 import { SUPPORTED_LANGUAGES } from '../services/languageRegistry';
 import { useTheme } from '../context/ThemeContext';
 import { LanguageDashboardChart } from './LanguageDashboardChart';
+import { ShowCardModal } from './ShowCardModal';
 
 interface ConversationHistoryViewProps {
   messages: ConversationMessage[];
@@ -34,6 +36,7 @@ export const ConversationHistoryView: React.FC<ConversationHistoryViewProps> = (
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showDashboard, setShowDashboard] = useState(true);
+  const [selectedShowCardMsg, setSelectedShowCardMsg] = useState<ConversationMessage | null>(null);
 
   const filteredMessages = messages.filter((msg) => {
     if (filterStarred && !msg.isStarred) return false;
@@ -356,6 +359,20 @@ export const ConversationHistoryView: React.FC<ConversationHistoryViewProps> = (
                     >
                       <Volume2 className="w-3.5 h-3.5" />
                     </button>
+                    <button
+                      onClick={() => {
+                        audioEngine.triggerHaptic(30);
+                        setSelectedShowCardMsg(msg);
+                      }}
+                      className={
+                        isDark
+                          ? 'p-1.5 rounded-lg bg-blue-950/80 hover:bg-blue-900 text-blue-300 border border-blue-700/60 transition-colors'
+                          : 'p-2 rounded-2xl neo-gel-button text-blue-600 hover:text-blue-800 transition-all shadow-xs'
+                      }
+                      title="कार्ड दिखाएं (Show Large Card to local person)"
+                    >
+                      <Maximize2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -363,6 +380,19 @@ export const ConversationHistoryView: React.FC<ConversationHistoryViewProps> = (
           })
         )}
       </div>
+
+      {/* Full-Screen Flip-to-Show Card Modal */}
+      {selectedShowCardMsg && (
+        <ShowCardModal
+          isOpen={Boolean(selectedShowCardMsg)}
+          onClose={() => setSelectedShowCardMsg(null)}
+          originalText={selectedShowCardMsg.originalText}
+          translatedText={selectedShowCardMsg.translatedText}
+          phoneticText={selectedShowCardMsg.phoneticText}
+          sourceLang={selectedShowCardMsg.sourceLang}
+          targetLang={selectedShowCardMsg.targetLang}
+        />
+      )}
     </div>
   );
 };

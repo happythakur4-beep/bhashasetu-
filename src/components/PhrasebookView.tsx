@@ -5,12 +5,14 @@ import {
   Send,
   Search,
   HardDrive,
+  Maximize2,
 } from 'lucide-react';
 import { ChannelNumber, ConversationMessage, LanguageCode, PhraseItem } from '../types';
 import { OFFLINE_PHRASEBOOK, SUPPORTED_LANGUAGES } from '../services/languageRegistry';
 import { audioEngine } from '../services/audioEngine';
 import { meshNetwork } from '../services/meshNetwork';
 import { useTheme } from '../context/ThemeContext';
+import { ShowCardModal } from './ShowCardModal';
 
 interface PhrasebookViewProps {
   currentChannel: ChannelNumber;
@@ -32,6 +34,13 @@ export const PhrasebookView: React.FC<PhrasebookViewProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [displayLanguage, setDisplayLanguage] = useState<LanguageCode>(activeLanguage);
   const [broadcastFeedback, setBroadcastFeedback] = useState<string | null>(null);
+  const [showCardData, setShowCardData] = useState<{
+    original: string;
+    translated: string;
+    phonetic?: string;
+    source: LanguageCode;
+    target: LanguageCode;
+  } | null>(null);
 
   const categories = [
     { id: 'all', label: 'All Phrases' },
@@ -365,6 +374,26 @@ export const PhrasebookView: React.FC<PhrasebookViewProps> = ({
                     >
                       <Send className="w-4 h-4" />
                     </button>
+                    <button
+                      onClick={() => {
+                        audioEngine.triggerHaptic(30);
+                        setShowCardData({
+                          original: phrase.english,
+                          translated: currentLangData.text,
+                          phonetic: currentLangData.phonetic,
+                          source: 'en',
+                          target: displayLanguage,
+                        });
+                      }}
+                      className={
+                        isDark
+                          ? 'p-2 rounded-xl bg-blue-950/80 hover:bg-blue-900 border border-blue-700/60 text-blue-300 transition-colors'
+                          : 'p-2 rounded-2xl neo-gel-button text-blue-600 hover:text-blue-800 hover:scale-105 transition-all shadow-xs'
+                      }
+                      title="कार्ड दिखाएं (Show Large Card to local person)"
+                    >
+                      <Maximize2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -372,6 +401,23 @@ export const PhrasebookView: React.FC<PhrasebookViewProps> = ({
           })
         )}
       </div>
+
+      {/* Full-Screen Show Card Modal */}
+      {showCardData && (
+        <ShowCardModal
+          isOpen={Boolean(showCardData)}
+          onClose={() => setShowCardData(null)}
+          originalText={showCardData.original}
+          translatedText={showCardData.translated}
+          phoneticText={showCardData.phonetic}
+          sourceLang={showCardData.source}
+          targetLang={showCardData.target}
+          onQuickReplyReceived={(replyText) => {
+            setBroadcastFeedback(`सामने वाले का उत्तर मिला: ${replyText}`);
+            setTimeout(() => setBroadcastFeedback(null), 4000);
+          }}
+        />
+      )}
     </div>
   );
 };

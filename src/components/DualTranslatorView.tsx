@@ -19,6 +19,7 @@ import {
   BookOpen,
   ChevronUp,
   ChevronDown,
+  Maximize2,
 } from 'lucide-react';
 import { ConversationMessage, LanguageCode } from '../types';
 import { SUPPORTED_LANGUAGES, OFFLINE_PHRASEBOOK } from '../services/languageRegistry';
@@ -26,6 +27,7 @@ import { audioEngine } from '../services/audioEngine';
 import { translatorService } from '../services/translatorService';
 import { LanguageSelector } from './LanguageSelector';
 import { useTheme } from '../context/ThemeContext';
+import { ShowCardModal } from './ShowCardModal';
 
 interface DualTranslatorViewProps {
   sourceLang: LanguageCode;
@@ -95,6 +97,13 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
   const [showLangPicker, setShowLangPicker] = useState<'A' | 'B' | null>(null);
   const [conversationList, setConversationList] = useState<ConversationMessage[]>([]);
   const [activePlayingId, setActivePlayingId] = useState<string | null>(null);
+  const [showCardData, setShowCardData] = useState<{
+    original: string;
+    translated: string;
+    phonetic?: string;
+    source: LanguageCode;
+    target: LanguageCode;
+  } | null>(null);
 
   // Batch Processing Mode state (Strictly single-speaker A->B)
   const [isBatchModeOpen, setIsBatchModeOpen] = useState(false);
@@ -1092,6 +1101,22 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
                     >
                       <Volume2 className="w-3.5 h-3.5" />
                     </button>
+                    <button
+                      onClick={() => {
+                        audioEngine.triggerHaptic(30);
+                        setShowCardData({
+                          original: item.originalText,
+                          translated: item.translatedText,
+                          phonetic: item.phoneticText,
+                          source: item.sourceLang,
+                          target: item.targetLang,
+                        });
+                      }}
+                      className={`p-1 ${isDark ? 'hover:text-blue-300' : 'hover:text-blue-700'}`}
+                      title="कार्ड दिखाएं (Show Large Card to local person)"
+                    >
+                      <Maximize2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
 
@@ -1615,6 +1640,36 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
         excludeLang={sourceLang}
         onOpenPackManager={onOpenPackManager}
       />
+
+      {/* 11. Full-Screen Flip-to-Show Card Modal */}
+      {showCardData && (
+        <ShowCardModal
+          isOpen={Boolean(showCardData)}
+          onClose={() => setShowCardData(null)}
+          originalText={showCardData.original}
+          translatedText={showCardData.translated}
+          phoneticText={showCardData.phonetic}
+          sourceLang={showCardData.source}
+          targetLang={showCardData.target}
+          onQuickReplyReceived={(replySourceText, replyTargetText) => {
+            const replyMsg: ConversationMessage = {
+              id: `qr_${Date.now()}`,
+              sender: 'peer',
+              senderName: 'Local Speaker (Quick Reply)',
+              sourceLang: showCardData.target,
+              targetLang: showCardData.source,
+              originalText: replyTargetText,
+              translatedText: replySourceText,
+              phoneticText: replySourceText,
+              timestamp: Date.now(),
+              isOffline: true,
+              engine: 'offline-lexicon',
+            };
+            setConversationList((prev) => [replyMsg, ...prev]);
+            onNewMessage(replyMsg);
+          }}
+        />
+      )}
     </div>
   );
 };

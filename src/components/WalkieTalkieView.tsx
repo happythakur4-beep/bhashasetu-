@@ -23,6 +23,7 @@ import {
   MessageSquare,
   RefreshCw,
   Sliders,
+  Maximize2,
 } from 'lucide-react';
 import {
   ChannelNumber,
@@ -45,6 +46,7 @@ import { WaveformVisualizer } from './WaveformVisualizer';
 import { LanguageSelector } from './LanguageSelector';
 import { OpusCodecHUD } from './OpusCodecHUD';
 import { BrevityMorseModal } from './BrevityMorseModal';
+import { ShowCardModal } from './ShowCardModal';
 import { useTheme } from '../context/ThemeContext';
 
 interface WalkieTalkieViewProps {
@@ -105,6 +107,13 @@ export const WalkieTalkieView: React.FC<WalkieTalkieViewProps> = ({
   const [showOpusHUD, setShowOpusHUD] = useState<boolean>(false);
   const [isOpusEnabled, setIsOpusEnabled] = useState<boolean>(opusCodec.getConfig().enabled);
   const [showBrevityModal, setShowBrevityModal] = useState<boolean>(false);
+  const [showCardData, setShowCardData] = useState<{
+    original: string;
+    translated: string;
+    phonetic?: string;
+    source: LanguageCode;
+    target: LanguageCode;
+  } | null>(null);
 
   useEffect(() => {
     // Proactively initialize microphone analyser for real-time waveform visualizer
@@ -1327,17 +1336,39 @@ export const WalkieTalkieView: React.FC<WalkieTalkieViewProps> = ({
                   </div>
                 </div>
 
-                <button
-                  onClick={handleReplayTTS}
-                  className={
-                    isDark
-                      ? 'p-2 rounded-xl bg-emerald-950/80 border border-emerald-700/60 text-emerald-300 hover:bg-emerald-900 transition-colors shrink-0'
-                      : 'p-2.5 rounded-2xl neo-gel-button text-purple-600 hover:text-purple-700 transition-all shrink-0 shadow-sm'
-                  }
-                  title="Replay Voice Speech"
-                >
-                  <Volume2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    onClick={handleReplayTTS}
+                    className={
+                      isDark
+                        ? 'p-2 rounded-xl bg-emerald-950/80 border border-emerald-700/60 text-emerald-300 hover:bg-emerald-900 transition-colors'
+                        : 'p-2.5 rounded-2xl neo-gel-button text-purple-600 hover:text-purple-700 transition-all shadow-sm'
+                    }
+                    title="Replay Voice Speech"
+                  >
+                    <Volume2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      audioEngine.triggerHaptic(30);
+                      setShowCardData({
+                        original: latestTransmission.originalText,
+                        translated: latestTransmission.translatedText,
+                        phonetic: latestTransmission.phoneticText,
+                        source: latestTransmission.sourceLang,
+                        target: latestTransmission.targetLang,
+                      });
+                    }}
+                    className={
+                      isDark
+                        ? 'p-2 rounded-xl bg-blue-950/80 border border-blue-700/60 text-blue-300 hover:bg-blue-900 transition-colors'
+                        : 'p-2.5 rounded-2xl neo-gel-button text-blue-600 hover:text-blue-700 transition-all shadow-sm'
+                    }
+                    title="कार्ड दिखाएं (Show Large Card to local person)"
+                  >
+                    <Maximize2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               {latestTransmission.dialectNotes && (
@@ -1850,6 +1881,36 @@ export const WalkieTalkieView: React.FC<WalkieTalkieViewProps> = ({
         targetLang={targetLang}
         currentChannel={currentChannel}
       />
+
+      {/* 12. Full-Screen Flip-to-Show Card Modal */}
+      {showCardData && (
+        <ShowCardModal
+          isOpen={Boolean(showCardData)}
+          onClose={() => setShowCardData(null)}
+          originalText={showCardData.original}
+          translatedText={showCardData.translated}
+          phoneticText={showCardData.phonetic}
+          sourceLang={showCardData.source}
+          targetLang={showCardData.target}
+          onQuickReplyReceived={(replySourceText, replyTargetText) => {
+            const replyMsg: ConversationMessage = {
+              id: `qr_${Date.now()}`,
+              sender: 'peer',
+              senderName: 'Local Person (Show Card Reply)',
+              sourceLang: showCardData.target,
+              targetLang: showCardData.source,
+              originalText: replyTargetText,
+              translatedText: replySourceText,
+              phoneticText: replySourceText,
+              timestamp: Date.now(),
+              isOffline: true,
+              engine: 'offline-lexicon',
+              channel: currentChannel,
+            };
+            onNewMessage(replyMsg);
+          }}
+        />
+      )}
     </div>
   );
 };
