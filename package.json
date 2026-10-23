@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test": "NODE_ENV=test tsx test/rooms.test.ts && NODE_ENV=test tsx test/dualTalk.test.ts && NODE_ENV=test tsx test/diagnosticsQuota.test.ts && NODE_ENV=test tsx test/audioSettings.test.ts && NODE_ENV=test tsx test/wordLearning.test.ts && NODE_ENV=test tsx test/languageDashboard.test.ts && NODE_ENV=test tsx test/smartReplyService.test.ts && NODE_ENV=test tsx test/meshTopology.test.ts && NODE_ENV=test tsx test/opusCodec.test.ts"
+    "test": "NODE_ENV=test tsx test/rooms.test.ts && NODE_ENV=test tsx test/dualTalk.test.ts && NODE_ENV=test tsx test/diagnosticsQuota.test.ts && NODE_ENV=test tsx test/audioSettings.test.ts && NODE_ENV=test tsx test/wordLearning.test.ts && NODE_ENV=test tsx test/languageDashboard.test.ts && NODE_ENV=test tsx test/smartReplyService.test.ts && NODE_ENV=test tsx test/meshTopology.test.ts && NODE_ENV=test tsx test/opusCodec.test.ts && NODE_ENV=test tsx test/securityHardening.test.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

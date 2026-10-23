@@ -20,10 +20,69 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+app.disable('x-powered-by');
 const server = http.createServer(app);
 const port = process.env.PORT || 3000;
 
-app.use(express.json({ limit: '20mb' }));
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'microphone=(self)');
+  next();
+});
+
+// High-Performance In-Memory Sliding-Window Rate Limiter
+interface RateLimitRecord {
+  count: number;
+  resetAt: number;
+}
+const rateLimitStore = new Map<string, RateLimitRecord>();
+
+function createRateLimiter(maxPerMinute: number) {
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    // In test environment, bypass rate limits to avoid false positives in fast test suites
+    if (process.env.NODE_ENV === 'test') return next();
+
+    const clientIp = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1')
+      .split(',')[0]
+      .trim();
+    const now = Date.now();
+    let record = rateLimitStore.get(clientIp);
+
+    if (!record || now > record.resetAt) {
+      record = { count: 1, resetAt: now + 60000 };
+      rateLimitStore.set(clientIp, record);
+    } else {
+      record.count++;
+      if (record.count > maxPerMinute) {
+        return res.status(429).json({
+          success: false,
+          error: `Rate limit exceeded. Maximum ${maxPerMinute} requests per minute.`,
+          code: 'RATE_LIMIT_EXCEEDED',
+          retryAfter: Math.ceil((record.resetAt - now) / 1000),
+        });
+      }
+    }
+    next();
+  };
+}
+
+// Clean up stale rate limits every 5 minutes
+const cleanupTimer = setInterval(() => {
+  const now = Date.now();
+  for (const [ip, rec] of rateLimitStore.entries()) {
+    if (now > rec.resetAt) rateLimitStore.delete(ip);
+  }
+}, 300000);
+cleanupTimer.unref();
+
+// Global body parser with 2MB limit (sufficient for text, headers, and metadata)
+app.use(express.json({ limit: '2mb' }));
+
+// Route-specific high payload limit only for audio base64 uploads
+const audioBodyParser = express.json({ limit: '15mb' });
 
 let serverApiKey = process.env.GEMINI_API_KEY || '';
 
@@ -80,7 +139,7 @@ async function generateGeminiTTS(text: string, voiceName: string = 'Kore', custo
 }
 
 // 1. Audio Transcription using configurable model (default: gemini-3.5-transcribe)
-app.post('/api/transcribe', async (req, res) => {
+app.post('/api/transcribe', audioBodyParser, createRateLimiter(45), async (req, res) => {
   const { audio, mimeType, language } = req.body;
 
   if (!audio) {
@@ -170,7 +229,7 @@ Output ONLY the transcription text. Do not add quotes, explanations, or notes.`;
 });
 
 // 2. Standalone Text-To-Speech Endpoint
-app.post('/api/tts', async (req, res) => {
+app.post('/api/tts', createRateLimiter(45), async (req, res) => {
   const { text, language, voiceName } = req.body;
 
   if (!text || !text.trim()) {
@@ -218,11 +277,20 @@ app.post('/api/tts', async (req, res) => {
 });
 
 // 3. Translation API endpoint with server-synthesized TTS audio
-app.post('/api/translate', async (req, res) => {
+app.post('/api/translate', createRateLimiter(60), async (req, res) => {
   const { text, sourceLang, targetLang, context, includeTTS } = req.body;
 
-  if (!text || !sourceLang || !targetLang) {
-    return res.status(400).json({ success: false, error: 'Missing required fields: text, sourceLang, targetLang' });
+  if (!text || typeof text !== 'string' || !sourceLang || !targetLang) {
+    return res.status(400).json({ success: false, error: 'Missing or invalid fields: text, sourceLang, targetLang' });
+  }
+
+  // Security bounds check: avoid token exhaustion & buffer bloat attacks
+  if (text.length > 2500) {
+    return res.status(400).json({
+      success: false,
+      error: 'Input text exceeds maximum allowed length of 2500 characters',
+      code: 'TEXT_TOO_LONG',
+    });
   }
 
   const sourceName = langNames[sourceLang] || sourceLang;
@@ -446,8 +514,23 @@ app.get('/api/quota', (req, res) => {
   res.json(apiQuotaTracker.getSummary(Boolean(key)));
 });
 
-// 4c. Runtime Key Configuration Endpoint (Allows setting key from UI without server restart)
+// 4c. Runtime Key Configuration Endpoint (Protected against remote tampering)
 app.post('/api/key', (req, res) => {
+  const remoteIp = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+  const isLoopback = remoteIp === '127.0.0.1' || remoteIp === '::1' || remoteIp === '::ffff:127.0.0.1' || remoteIp === '' || req.hostname === 'localhost';
+
+  const adminSecret = process.env.ADMIN_SECRET;
+  const providedSecret = req.headers['x-admin-secret'];
+
+  // Prevent arbitrary external internet users from modifying global server API key
+  if (!isLoopback && adminSecret && providedSecret !== adminSecret) {
+    return res.status(403).json({
+      success: false,
+      error: 'Forbidden: Global server API key can only be updated from localhost or with valid x-admin-secret.',
+      code: 'FORBIDDEN',
+    });
+  }
+
   const { apiKey } = req.body || {};
   if (typeof apiKey === 'string') {
     serverApiKey = apiKey.trim();

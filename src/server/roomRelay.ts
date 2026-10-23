@@ -15,6 +15,8 @@ export interface RoomSocketContext {
   currentRoomCode: string;
   currentClientId: string;
   isAlive: boolean;
+  packetCount: number;
+  lastPacketReset: number;
 }
 
 export interface PacketPayload {
@@ -146,6 +148,8 @@ export class RoomRelayService {
       currentRoomCode: '',
       currentClientId: '',
       isAlive: true,
+      packetCount: 0,
+      lastPacketReset: Date.now(),
     };
 
     ws.on('pong', () => {
@@ -191,13 +195,25 @@ export class RoomRelayService {
             return;
           }
 
+          const targetRoom = String(roomCode).trim().slice(0, 32);
+          let assignedClientId = String(clientId).trim().slice(0, 64);
+
+          // Validate room code and client ID format
+          if (!/^[a-zA-Z0-9_\-\.]+$/.test(targetRoom) || !/^[a-zA-Z0-9_\-\.]+$/.test(assignedClientId)) {
+            ws.send(
+              JSON.stringify({
+                type: 'error',
+                code: 'INVALID_FORMAT',
+                message: 'Room code and client ID must be alphanumeric (a-z, 0-9, _, -, .)',
+              })
+            );
+            return;
+          }
+
           // Leave previous room if switching
           if (context.currentRoomCode && context.currentClientId) {
             this.removeClientFromRoom(context.currentRoomCode, context.currentClientId, ws);
           }
-
-          const targetRoom = String(roomCode).trim();
-          let assignedClientId = String(clientId).trim();
 
           if (!this.rooms.has(targetRoom)) {
             this.rooms.set(targetRoom, new Map());
@@ -220,9 +236,9 @@ export class RoomRelayService {
           const newPeer: RoomPeer = {
             ws,
             clientId: assignedClientId,
-            name: name || `Unit-${assignedClientId.slice(-4)}`,
-            state: state || 'Field Station',
-            language: language || 'hi',
+            name: String(name || `Unit-${assignedClientId.slice(-4)}`).slice(0, 40),
+            state: String(state || 'Field Station').slice(0, 50),
+            language: String(language || 'hi').slice(0, 10),
             joinedAt: Date.now(),
             lastPing: Date.now(),
             isAlive: true,
@@ -283,6 +299,25 @@ export class RoomRelayService {
               })
             );
             return;
+          }
+
+          // 1b. Rate limit: protect peers against packet flood / DoS
+          const now = Date.now();
+          if (now - context.lastPacketReset > 1000) {
+            context.packetCount = 1;
+            context.lastPacketReset = now;
+          } else {
+            context.packetCount++;
+            if (context.packetCount > 35) { // Max 35 packets per second
+              ws.send(
+                JSON.stringify({
+                  type: 'error',
+                  code: 'RATE_LIMIT_EXCEEDED',
+                  message: 'Transmission rate limit exceeded (maximum 35 packets/sec)',
+                })
+              );
+              return;
+            }
           }
 
           // 2. Cross-room spoofing prevention
