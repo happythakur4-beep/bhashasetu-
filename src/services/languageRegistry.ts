@@ -751,8 +751,8 @@ export const OFFLINE_PHRASEBOOK: PhraseItem[] = [
     category: 'general',
     english: 'How are you? How is everything?',
     hindi: {
-      text: 'केड़ा हाल चाल है?',
-      phonetic: 'Keda haal chaal hai?',
+      text: 'आप कैसे हैं? कैसा हाल चाल है?',
+      phonetic: 'Aap kaise hain? Kaisa haal chaal hai?',
     },
     odia: {
       text: 'ଆପଣ କେମିତି ଅଛନ୍ତି?',
@@ -925,6 +925,204 @@ export const OFFLINE_PHRASEBOOK: PhraseItem[] = [
       phonetic: 'Ke ithi taaja roti te chaah milni?',
     },
     icon: 'Coffee',
+  },
+  {
+    id: 'conv_yes',
+    category: 'general',
+    english: 'Yes',
+    hindi: {
+      text: 'हाँ',
+      phonetic: 'Haan',
+    },
+    odia: {
+      text: 'ହଁ',
+      phonetic: 'Han',
+    },
+    mandali: {
+      text: 'हाँ / होय',
+      phonetic: 'Haan / Hoy',
+    },
+    icon: 'Check',
+  },
+  {
+    id: 'conv_no',
+    category: 'general',
+    english: 'No',
+    hindi: {
+      text: 'नहीं',
+      phonetic: 'Nahi',
+    },
+    odia: {
+      text: 'ନାହିଁ',
+      phonetic: 'Nahin',
+    },
+    mandali: {
+      text: 'नी',
+      phonetic: 'Nee',
+    },
+    icon: 'X',
+  },
+  {
+    id: 'conv_ok',
+    category: 'general',
+    english: 'All right, OK',
+    hindi: {
+      text: 'ठीक है, अच्छा',
+      phonetic: 'Theek hai, achha',
+    },
+    odia: {
+      text: 'ଠିକ ଅଛି, ଭଲ',
+      phonetic: 'Thik achhi, bhala',
+    },
+    mandali: {
+      text: 'ठीक है',
+      phonetic: 'Theek hai',
+    },
+    icon: 'ThumbsUp',
+  },
+  {
+    id: 'conv_help_me',
+    category: 'emergency',
+    english: 'Please help me',
+    hindi: {
+      text: 'मदद करो / सहायता चाहिए',
+      phonetic: 'Madad karo / Sahayata chahiye',
+    },
+    odia: {
+      text: 'ଦୟାକରି ମୋତେ ସାହାଯ୍ୟ କରନ୍ତୁ',
+      phonetic: 'Dayakari mote sahayya karantu',
+    },
+    mandali: {
+      text: 'म्हारी मदद करा',
+      phonetic: 'Mhari madad kara',
+    },
+    icon: 'LifeBuoy',
+  },
+  {
+    id: 'conv_water_give',
+    category: 'food',
+    english: 'Please give water / Drinking water',
+    hindi: {
+      text: 'पानी दो / पीने का पानी',
+      phonetic: 'Paani do / Peene ka paani',
+    },
+    odia: {
+      text: 'ଦୟାକରି ପାଣି ଦିଅନ୍ତୁ',
+      phonetic: 'Dayakari pani diantu',
+    },
+    mandali: {
+      text: 'पाणी दस्सा / पाणी द्या',
+      phonetic: 'Paani dassa / Paani dya',
+    },
+    icon: 'Droplet',
+  },
+  {
+    id: 'conv_doctor_call',
+    category: 'medical',
+    english: 'Call a doctor',
+    hindi: {
+      text: 'डॉक्टर को बुलाओ',
+      phonetic: 'Doctor ko bulao',
+    },
+    odia: {
+      text: 'ଡାକ୍ତରଙ୍କୁ ଡାକନ୍ତୁ',
+      phonetic: 'Daktaranku dakantu',
+    },
+    mandali: {
+      text: 'डाक्टरा जो सदो',
+      phonetic: 'Daktara jo sado',
+    },
+    icon: 'UserCheck',
+  },
+  {
+    id: 'conv_road_show',
+    category: 'directions',
+    english: 'Please tell me the way / route',
+    hindi: {
+      text: 'रास्ता बताओ / रास्ता बताइए',
+      phonetic: 'Rasta batao / Rasta bataiye',
+    },
+    odia: {
+      text: 'ରାସ୍ତା କୁହନ୍ତୁ',
+      phonetic: 'Rasta kuhantu',
+    },
+    mandali: {
+      text: 'रस्ता दस्सा',
+      phonetic: 'Rasta dassa',
+    },
+    icon: 'Navigation',
+  },
+  {
+    id: 'conv_vehicle_broken',
+    category: 'travel',
+    english: 'Vehicle is broken down',
+    hindi: {
+      text: 'गाड़ी खराब है',
+      phonetic: 'Gaadi kharab hai',
+    },
+    odia: {
+      text: 'ଗାଡ଼ି ଖରାପ ଅଛି',
+      phonetic: 'Gadi kharap achhi',
+    },
+    mandali: {
+      text: 'गाड़ी खराब है',
+      phonetic: 'Gaadi kharab hai',
+    },
+    icon: 'Wrench',
+  },
+  {
+    id: 'conv_hotel_where',
+    category: 'travel',
+    english: 'Where is a hotel or place to stay?',
+    hindi: {
+      text: 'होटल कहाँ है? सराय कहाँ है?',
+      phonetic: 'Hotel kahan hai? Saraye kahan hai?',
+    },
+    odia: {
+      text: 'ହୋଟେଲ କେଉଁଠି ଅଛି?',
+      phonetic: 'Hotel keunthi achhi?',
+    },
+    mandali: {
+      text: 'होटल कुथु है?',
+      phonetic: 'Hotel kuthu hai?',
+    },
+    icon: 'Home',
+  },
+  {
+    id: 'conv_toilet_where',
+    category: 'general',
+    english: 'Where is the restroom / toilet?',
+    hindi: {
+      text: 'शौचालय कहाँ है? टॉयलेट कहाँ है?',
+      phonetic: 'Shauchalaya kahan hai? Toilet kahan hai?',
+    },
+    odia: {
+      text: 'ଶୌଚାଳୟ କେଉଁଠି ଅଛି?',
+      phonetic: 'Shauchalaya keunthi achhi?',
+    },
+    mandali: {
+      text: 'शौचालय कुथु है?',
+      phonetic: 'Shauchalaya kuthu hai?',
+    },
+    icon: 'HelpCircle',
+  },
+  {
+    id: 'conv_morning_greeting',
+    category: 'general',
+    english: 'Good morning',
+    hindi: {
+      text: 'सुप्रभात / शुभ प्रभात',
+      phonetic: 'Suprabhat / Shubh prabhat',
+    },
+    odia: {
+      text: 'ଶୁଭ ସକାଳ',
+      phonetic: 'Subha sakala',
+    },
+    mandali: {
+      text: 'शुभ प्रभात',
+      phonetic: 'Shubh prabhat',
+    },
+    icon: 'Sun',
   },
 ];
 
@@ -1121,6 +1319,207 @@ export function applyReverseMandaliRules(mandaliText: string): { text: string; p
   };
 }
 
+// Offline Odia Dialect Transformation Rules (Hindi -> Odia direct lexicon & grammar)
+export function applyOdiaDialectRules(hindiText: string): { text: string; phonetic: string; notes: string } | null {
+  const text = hindiText.trim();
+  const clean = cleanQueryPunctuation(text);
+
+  const directMap: Record<string, { text: string; phonetic: string }> = {
+    'हाँ': { text: 'ହଁ', phonetic: 'Han' },
+    'हां': { text: 'ହଁ', phonetic: 'Han' },
+    'हाँ जी': { text: 'ହଁ ଆଜ୍ଞା', phonetic: 'Han aagnya' },
+    'नहीं': { text: 'ନାହିଁ', phonetic: 'Nahin' },
+    'ना': { text: 'ନା', phonetic: 'Na' },
+    'नमस्ते': { text: 'ନମସ୍କାର', phonetic: 'Namaskar' },
+    'नमस्कार': { text: 'ନମସ୍କାର', phonetic: 'Namaskar' },
+    'नमस्ते जी': { text: 'ନମସ୍କାର ଆଜ୍ଞା', phonetic: 'Namaskar aagnya' },
+    'प्रणाम': { text: 'ପ୍ରଣାମ', phonetic: 'Pranam' },
+    'सुप्रभात': { text: 'ଶୁଭ ସକାଳ', phonetic: 'Subha sakala' },
+    'शुभ प्रभात': { text: 'ଶୁଭ ସକାଳ', phonetic: 'Subha sakala' },
+    'शुभ रात्रि': { text: 'ଶୁଭ ରାତ୍ରି', phonetic: 'Subha ratri' },
+    'धन्यवाद': { text: 'ଧନ୍ୟବାଦ', phonetic: 'Dhanyavad' },
+    'बहुत धन्यवाद': { text: 'ବହୁତ ଧନ୍ୟବାଦ', phonetic: 'Bahut dhanyavad' },
+    'शुक्रिया': { text: 'ଧନ୍ୟବାଦ', phonetic: 'Dhanyavad' },
+    'थैंक यू': { text: 'ଧନ୍ୟବାଦ', phonetic: 'Dhanyavad' },
+    'आप कैसे हैं': { text: 'ଆପଣ କେମିତି ଅଛନ୍ତି?', phonetic: 'Aapana kemiti achhanti?' },
+    'आप कैसे हैं?': { text: 'ଆପଣ କେମିତି ଅଛନ୍ତି?', phonetic: 'Aapana kemiti achhanti?' },
+    'आप कैसे हो': { text: 'ଆପଣ କେମିତି ଅଛନ୍ତି?', phonetic: 'Aapana kemiti achhanti?' },
+    'कैसे हो': { text: 'କେମିତି ଅଛନ୍ତି?', phonetic: 'Kemiti achhanti?' },
+    'कैसा हाल है': { text: 'କେମିତି ଅଛନ୍ତି?', phonetic: 'Kemiti achhanti?' },
+    'सब ठीक है': { text: 'ସବୁ ଠିକ ଅଛି।', phonetic: 'Sabu thik achhi.' },
+    'सब ठीक है।': { text: 'ସବୁ ଠିକ ଅଛି।', phonetic: 'Sabu thik achhi.' },
+    'मैं ठीक हूँ': { text: 'ମୁଁ ଭଲ ଅଛି।', phonetic: 'Mun bhala achhi.' },
+    'हम ठीक हैं': { text: 'ଆମେ ଭଲ ଅଛୁ।', phonetic: 'Aame bhala achhu.' },
+    'ठीक है': { text: 'ଠିକ ଅଛି।', phonetic: 'Thik achhi.' },
+    'अच्छा': { text: 'ଭଲ / ଠିକ ଅଛି।', phonetic: 'Bhala / Thik achhi.' },
+    'आपका नाम क्या है': { text: 'ଆପଣଙ୍କ ନାମ କଣ?', phonetic: 'Aapananka naama kana?' },
+    'आपका नाम क्या है?': { text: 'ଆପଣଙ୍କ ନାମ କଣ?', phonetic: 'Aapananka naama kana?' },
+    'तुम्हारा नाम क्या है': { text: 'ତୁମ ନାମ କଣ?', phonetic: 'Tuma naama kana?' },
+    'तुम्हारा नाम क्या है?': { text: 'ତୁମ ନାମ କଣ?', phonetic: 'Tuma naama kana?' },
+    'पानी दो': { text: 'ଦୟାକରି ପାଣି ଦିଅନ୍ତୁ।', phonetic: 'Dayakari pani diantu.' },
+    'पानी दीजिए': { text: 'ଦୟାକରି ପାଣି ଦିଅନ୍ତୁ।', phonetic: 'Dayakari pani diantu.' },
+    'मुझे पानी चाहिए': { text: 'ମୋତେ ପିଇବା ପାଣି ଦରକାର।', phonetic: 'Mote piiba pani darkar.' },
+    'पीने का पानी': { text: 'ପିଇବା ପାଣି', phonetic: 'Piiba pani' },
+    'पानी चाहिए': { text: 'ପାଣି ଦରକାର।', phonetic: 'Pani darkar.' },
+    'मुझे खाना चाहिए': { text: 'ମୋତେ ଖାଦ୍ୟ ଦରକାର।', phonetic: 'Mote khadya darkar.' },
+    'खाना कहाँ मिलेगा': { text: 'ଖାଇବା କେଉଁଠି ମିଳିବ?', phonetic: 'Khaiba keunthi miliba?' },
+    'खाना कहाँ मिलेगा?': { text: 'ଖାଇବା କେଉଁଠି ମିଳିବ?', phonetic: 'Khaiba keunthi miliba?' },
+    'खाना चाहिए': { text: 'ଖାଦ୍ୟ ଦରକାର।', phonetic: 'Khadya darkar.' },
+    'चाय मिलेगी': { text: 'ଚାହା ମିଳିବ କି?', phonetic: 'Chaha miliba ki?' },
+    'चाय मिलेगी?': { text: 'ଚାହା ମିଳିବ କି?', phonetic: 'Chaha miliba ki?' },
+    'मुझे चाय चाहिए': { text: 'ମୋତେ ଚାହା ଦରକାର।', phonetic: 'Mote chaha darkar.' },
+    'मदद करो': { text: 'ଦୟାକରି ସାହାଯ୍ୟ କରନ୍ତୁ।', phonetic: 'Dayakari sahayya karantu.' },
+    'मदद चाहिए': { text: 'ସାହାଯ୍ୟ ଦରକାର।', phonetic: 'Sahayya darkar.' },
+    'मुझे मदद चाहिए': { text: 'ମୋତେ ସାହାଯ୍ୟ ଦରକାର।', phonetic: 'Mote sahayya darkar.' },
+    'कृपया मदद करें': { text: 'ଦୟାକରି ସାହାଯ୍ୟ କରନ୍ତୁ।', phonetic: 'Dayakari sahayya karantu.' },
+    'डॉक्टर को बुलाओ': { text: 'ଡାକ୍ତରଙ୍କୁ ଡାକନ୍ତୁ।', phonetic: 'Daktaranku dakantu.' },
+    'अस्पताल कहाँ है': { text: 'ଡାକ୍ତରଖାନା କେଉଁଠି ଅଛି?', phonetic: 'Daktarakhana keunthi achhi?' },
+    'अस्पताल कहाँ है?': { text: 'ଡାକ୍ତରଖାନା କେଉଁଠି ଅଛି?', phonetic: 'Daktarakhana keunthi achhi?' },
+    'दवाई कहाँ मिलेगी': { text: 'ଔଷଧ କେଉଁଠି ମିଳିବ?', phonetic: 'Aushadha keunthi miliba?' },
+    'दवाई की दुकान कहाँ है': { text: 'ଔଷଧ ଦୋକାନ କେଉଁଠି ଅଛି?', phonetic: 'Aushadha dokana keunthi achhi?' },
+    'दवाई की दुकान कहाँ है?': { text: 'ଔଷଧ ଦୋକାନ କେଉଁଠି ଅଛି?', phonetic: 'Aushadha dokana keunthi achhi?' },
+    'पुलिस को बुलाओ': { text: 'ପୋଲିସକୁ ଡାକନ୍ତୁ।', phonetic: 'Policeku dakantu.' },
+    'पुलिस स्टेशन कहाँ है': { text: 'ପୋଲିସ ଷ୍ଟେସନ କେଉଁଠି ଅଛି?', phonetic: 'Police station keunthi achhi?' },
+    'पुलिस स्टेशन कहाँ है?': { text: 'ପୋଲିସ ଷ୍ଟେସନ କେଉଁଠି ଅଛି?', phonetic: 'Police station keunthi achhi?' },
+    'गाड़ी खराब है': { text: 'ଗାଡ଼ି ଖରାପ ଅଛି।', phonetic: 'Gadi kharap achhi.' },
+    'गाड़ी खराब हो गई है': { text: 'ମୋ ଗାଡ଼ି ଖରାପ ହୋଇଯାଇଛି।', phonetic: 'Mo gadi kharap hoiyaichhi.' },
+    'मेरी गाड़ी खराब हो गई है': { text: 'ମୋ ଗାଡ଼ି ଖରାପ ହୋଇଯାଇଛି।', phonetic: 'Mo gadi kharap hoiyaichhi.' },
+    'मैकेनिक कहाँ मिलेगा': { text: 'ମେକାନିକ କେଉଁଠି ମିଳିବେ?', phonetic: 'Mechanic keunthi milibe?' },
+    'मैकेनिक कहाँ मिलेगा?': { text: 'ମେକାନିକ କେଉଁଠି ମିଳିବେ?', phonetic: 'Mechanic keunthi milibe?' },
+    'पेट्रोल पंप कहाँ है': { text: 'ପେଟ୍ରୋଲ ପମ୍ପ କେଉଁଠି ଅଛି?', phonetic: 'Petrol pump keunthi achhi?' },
+    'पेट्रोल पंप कहाँ है?': { text: 'ପେଟ୍ରୋଲ ପମ୍ପ କେଉଁଠି ଅଛି?', phonetic: 'Petrol pump keunthi achhi?' },
+    'बस स्टैंड कहाँ है': { text: 'ବସ ଷ୍ଟାଣ୍ଡ କେଉଁଠି ଅଛି?', phonetic: 'Bus stand keunthi achhi?' },
+    'बस स्टैंड कहाँ है?': { text: 'ବସ ଷ୍ଟାଣ୍ଡ କେଉଁଠି ଅଛି?', phonetic: 'Bus stand keunthi achhi?' },
+    'रेलवे स्टेशन कहाँ है': { text: 'ରେଳ ଷ୍ଟେସନ କେଉଁଠି ଅଛି?', phonetic: 'Rela station keunthi achhi?' },
+    'रेलवे स्टेशन कहाँ है?': { text: 'ରେଳ ଷ୍ଟେସନ କେଉଁଠି ଅଛି?', phonetic: 'Rela station keunthi achhi?' },
+    'रास्ता बताओ': { text: 'ଦୟାକରି ରାସ୍ତା କୁହନ୍ତୁ।', phonetic: 'Dayakari rasta kuhantu.' },
+    'रास्ता बताइए': { text: 'ଦୟାକରି ରାସ୍ତା କୁହନ୍ତୁ।', phonetic: 'Dayakari rasta kuhantu.' },
+    'यह रास्ता कहाँ जाता है': { text: 'ଏହି ରାସ୍ତା କେଉଁଆଡ଼େ ଯାଉଛି?', phonetic: 'Ehi rasta keunade yauchhi?' },
+    'यह रास्ता कहाँ जाता है?': { text: 'ଏହି ରାସ୍ତା କେଉଁଆଡ଼େ ଯାଉଛି?', phonetic: 'Ehi rasta keunade yauchhi?' },
+    'सीधे आगे': { text: 'ସିଧା ଆଗକୁ', phonetic: 'Sidha aagaku' },
+    'सीधे जाइए': { text: 'ସିଧା ଆଗକୁ ଯାଆନ୍ତୁ।', phonetic: 'Sidha aagaku yaantu.' },
+    'बाईं तरफ': { text: 'ବାମ ପାଖ', phonetic: 'Bama pakha' },
+    'दाईं तरफ': { text: 'ଡାହାଣ ପାଖ', phonetic: 'Dahana pakha' },
+    'बाएं मुड़िए': { text: 'ବାମ ପାଖକୁ ଯାଆନ୍ତୁ।', phonetic: 'Bama pakhaku yaantu.' },
+    'दाएं मुड़िए': { text: 'ଡାହାଣ ପାଖକୁ ଯାଆନ୍ତୁ।', phonetic: 'Dahana pakhaku yaantu.' },
+    'रुको': { text: 'ଟିକେ ଅପେକ୍ଷା କରନ୍ତୁ।', phonetic: 'Tike apeksha karantu.' },
+    'रुकिए': { text: 'ଟିକେ ଅପେକ୍ଷା କରନ୍ତୁ।', phonetic: 'Tike apeksha karantu.' },
+    'ठहरो': { text: 'ଟିକେ ଅପେକ୍ଷା କରନ୍ତୁ।', phonetic: 'Tike apeksha karantu.' },
+    'चलो': { text: 'ଚାଲନ୍ତୁ।', phonetic: 'Chalantu.' },
+    'चलिए': { text: 'ଚାଲନ୍ତୁ।', phonetic: 'Chalantu.' },
+    'होटल कहाँ है': { text: 'ହୋଟେଲ କେଉଁଠି ଅଛି?', phonetic: 'Hotel keunthi achhi?' },
+    'होटल कहाँ है?': { text: 'ହୋଟେଲ କେଉଁଠି ଅଛି?', phonetic: 'Hotel keunthi achhi?' },
+    'शौचालय कहाँ है': { text: 'ଶୌଚାଳୟ କେଉଁଠି ଅଛି?', phonetic: 'Shauchalaya keunthi achhi?' },
+    'शौचालय कहाँ है?': { text: 'ଶୌଚାଳୟ କେଉଁଠି ଅଛି?', phonetic: 'Shauchalaya keunthi achhi?' },
+    'टॉयलेट कहाँ है': { text: 'ଶୌଚାଳୟ କେଉଁଠି ଅଛି?', phonetic: 'Shauchalaya keunthi achhi?' },
+    'टॉयलेट कहाँ है?': { text: 'ଶୌଚାଳୟ କେଉଁଠି ଅଛି?', phonetic: 'Shauchalaya keunthi achhi?' },
+    'कितने पैसे हुए': { text: 'କେତେ ଟଙ୍କା ହେଲା?', phonetic: 'Kete tanka hela?' },
+    'कितने पैसे हुए?': { text: 'କେତେ ଟଙ୍କା ହେଲା?', phonetic: 'Kete tanka hela?' },
+    'कितना हुआ': { text: 'କେତେ ଟଙ୍କା ହେଲା?', phonetic: 'Kete tanka hela?' },
+    'कितना हुआ?': { text: 'କେତେ ଟଙ୍କା ହେଲା?', phonetic: 'Kete tanka hela?' },
+    'इसकी कीमत क्या है': { text: 'ଏହାର ଦାମ କେତେ?', phonetic: 'Eharn daam kete?' },
+    'इसकी कीमत क्या है?': { text: 'ଏହାର ଦାମ କେତେ?', phonetic: 'Eharn daam kete?' },
+    'यह कितने का है': { text: 'ଏହା କେତେ ଟଙ୍କାର?', phonetic: 'Eha kete tankara?' },
+    'यह कितने का है?': { text: 'ଏହା କେତେ ଟଙ୍କାର?', phonetic: 'Eha kete tankara?' },
+    'मुझे समझ नहीं आया': { text: 'ମୁଁ ବୁଝିପାରିଲି ନାହିଁ।', phonetic: 'Mun bujhiparili nahin.' },
+    'कृपया धीरे बोलिए': { text: 'ଦୟାକରି ଧୀରେ କୁହନ୍ତୁ।', phonetic: 'Dayakari dhire kuhantu.' },
+    'खतरा है': { text: 'ବିପଦ ଅଛି!', phonetic: 'Bipada achhi!' },
+    'सावधान रहें': { text: 'ସାବଧାନ ରୁହନ୍ତୁ!', phonetic: 'Sabadhana ruhantu!' },
+  };
+
+  for (const [hi, odia] of Object.entries(directMap)) {
+    if (text === hi || clean === cleanQueryPunctuation(hi)) {
+      return {
+        text: odia.text,
+        phonetic: odia.phonetic,
+        notes: 'Direct authentic Odia translation',
+      };
+    }
+  }
+
+  return null;
+}
+
+// Reverse translation (Odia -> Hindi)
+export function applyOdiaToHindiRules(odiaText: string): { text: string; phonetic: string; notes: string } | null {
+  const text = odiaText.trim();
+  const clean = cleanQueryPunctuation(text);
+
+  const directMap: Record<string, { text: string; phonetic: string }> = {
+    'ହଁ': { text: 'हाँ', phonetic: 'Haan' },
+    'ହଁ ଆଜ୍ଞା': { text: 'हाँ जी', phonetic: 'Haan ji' },
+    'ନାହିଁ': { text: 'नहीं', phonetic: 'Nahi' },
+    'ନା': { text: 'ना', phonetic: 'Na' },
+    'ନମସ୍କାର': { text: 'नमस्ते', phonetic: 'Namaste' },
+    'ନମସ୍କାର ଆଜ୍ଞା': { text: 'नमस्ते जी', phonetic: 'Namaste ji' },
+    'ଧନ୍ୟବାଦ': { text: 'धन्यवाद', phonetic: 'Dhanyavaad' },
+    'ବହୁତ ଧନ୍ୟବାଦ': { text: 'बहुत धन्यवाद', phonetic: 'Bahut dhanyavaad' },
+    'ଆପଣ କେମିତି ଅଛନ୍ତି': { text: 'आप कैसे हैं?', phonetic: 'Aap kaise hain?' },
+    'ଆପଣ କେମିତି ଅଛନ୍ତି?': { text: 'आप कैसे हैं?', phonetic: 'Aap kaise hain?' },
+    'କେମିତି ଅଛନ୍ତି': { text: 'कैसे हैं?', phonetic: 'Kaise hain?' },
+    'ମୁଁ ଭଲ ଅଛି': { text: 'मैं ठीक हूँ।', phonetic: 'Main theek hoon.' },
+    'ମୁଁ ଭଲ ଅଛି।': { text: 'मैं ठीक हूँ।', phonetic: 'Main theek hoon.' },
+    'ସବୁ ଠିକ ଅଛି': { text: 'सब ठीक है।', phonetic: 'Sab theek hai.' },
+    'ସବୁ ଠିକ ଅଛି।': { text: 'सब ठीक है।', phonetic: 'Sab theek hai.' },
+    'ଠିକ ଅଛି': { text: 'ठीक है।', phonetic: 'Theek hai.' },
+    'ଠିକ ଅଛି।': { text: 'ठीक है।', phonetic: 'Theek hai.' },
+    'ଭଲ': { text: 'अच्छा', phonetic: 'Achha' },
+    'ସିଧା ଆଗକୁ': { text: 'सीधे आगे', phonetic: 'Seedhe aage' },
+    'ବାମ ପାଖ': { text: 'बाईं तरफ', phonetic: 'Baayein taraf' },
+    'ଡାହାଣ ପାଖ': { text: 'दाईं तरफ', phonetic: 'Daayein taraf' },
+    'ଟିକେ ଅପେକ୍ଷା କରନ୍ତୁ': { text: 'थोड़ा रुकिए', phonetic: 'Thoda rukiye' },
+    'ଟିକେ ଅପେକ୍ଷା କର': { text: 'थोड़ा रुकिए', phonetic: 'Thoda rukiye' },
+    'ଚାଲନ୍ତୁ': { text: 'चलिए', phonetic: 'Chaliye' },
+    'କେତେ ଟଙ୍କା ହେଲା': { text: 'कितने पैसे हुए?', phonetic: 'Kitne paise hue?' },
+    'କେତେ ଟଙ୍କା ହେଲା?': { text: 'कितने पैसे हुए?', phonetic: 'Kitne paise hue?' },
+    'କେତେ ଟଙ୍କା': { text: 'कितने पैसे?', phonetic: 'Kitne paise?' },
+    'ପାଣି ଦିଅନ୍ତୁ': { text: 'पानी दीजिए / पानी दो', phonetic: 'Paani dijiye / Paani do' },
+    'ଦୟାକରି ପାଣି ଦିଅନ୍ତୁ': { text: 'कृपया पानी दीजिए', phonetic: 'Kripya paani dijiye' },
+    'ଦୟାକରି ପାଣି ଦିଅନ୍ତୁ।': { text: 'कृपया पानी दीजिए', phonetic: 'Kripya paani dijiye' },
+    'ଡାକ୍ତରଙ୍କୁ ଡାକନ୍ତୁ': { text: 'डॉक्टर को बुलाओ', phonetic: 'Doctor ko bulao' },
+    'ଡାକ୍ତରଙ୍କୁ ଡାକନ୍ତୁ।': { text: 'डॉक्टर को बुलाओ', phonetic: 'Doctor ko bulao' },
+    'ରାସ୍ତା କୁହନ୍ତୁ': { text: 'रास्ता बताइए / रास्ता बताओ', phonetic: 'Rasta bataiye / Rasta batao' },
+    'ଦୟାକରି ରାସ୍ତା କୁହନ୍ତୁ': { text: 'कृपया रास्ता बताइए', phonetic: 'Kripya rasta bataiye' },
+    'ଦୟାକରି ରାସ୍ତା କୁହନ୍ତୁ।': { text: 'कृपया रास्ता बताइए', phonetic: 'Kripya rasta bataiye' },
+    'ସାହାଯ୍ୟ କରନ୍ତୁ': { text: 'मदद कीजिए / मदद करो', phonetic: 'Madad kijiye / Madad karo' },
+    'ଦୟାକରି ସାହାଯ୍ୟ କରନ୍ତୁ': { text: 'कृपया मदद कीजिए', phonetic: 'Kripya madad kijiye' },
+    'ଦୟାକରି ସାହାଯ୍ୟ କରନ୍ତୁ।': { text: 'कृपया मदद कीजिए', phonetic: 'Kripya madad kijiye' },
+    'ମୋତେ ସାହାଯ୍ୟ ଦରକାର': { text: 'मुझे सहायता चाहिए', phonetic: 'Mujhe sahayata chahiye' },
+    'ମୋତେ ସାହାଯ୍ୟ ଦରକାର!': { text: 'मुझे सहायता चाहिए!', phonetic: 'Mujhe sahayata chahiye!' },
+    'ହୋଟେଲ କେଉଁଠି ଅଛି': { text: 'होटल कहाँ है?', phonetic: 'Hotel kahan hai?' },
+    'ହୋଟେଲ କେଉଁଠି ଅଛି?': { text: 'होटल कहाँ है?', phonetic: 'Hotel kahan hai?' },
+    'ଶୌଚାଳୟ କେଉଁଠି ଅଛି': { text: 'शौचालय कहाँ है?', phonetic: 'Shauchalaya kahan hai?' },
+    'ଶୌଚାଳୟ କେଉଁଠି ଅଛି?': { text: 'शौचालय कहाँ है?', phonetic: 'Shauchalaya kahan hai?' },
+    'ପେଟ୍ରୋଲ ପମ୍ପ କେଉଁଠି ଅଛି': { text: 'पेट्रोल पंप कहाँ है?', phonetic: 'Petrol pump kahan hai?' },
+    'ପେଟ୍ରୋଲ ପମ୍ପ କେଉଁଠି ଅଛି?': { text: 'पेट्रोल पंप कहाँ है?', phonetic: 'Petrol pump kahan hai?' },
+    'ଗାଡ଼ି ଖରାପ ଅଛି': { text: 'गाड़ी खराब है', phonetic: 'Gaadi kharaab hai' },
+    'ଗାଡ଼ି ଖରାପ ଅଛି।': { text: 'गाड़ी खराब है', phonetic: 'Gaadi kharaab hai' },
+    'ଶୁଭ ସକାଳ': { text: 'सुप्रभात', phonetic: 'Suprabhat' },
+    'ଶୁଭ ରାତ୍ରି': { text: 'शुभ रात्रि', phonetic: 'Shubh raatri' },
+    'କୁଆଡ଼େ ଯାଉଛନ୍ତି': { text: 'कहाँ जा रहे हैं?', phonetic: 'Kahan jaa rahe hain?' },
+    'କୁଆଡ଼େ ଯାଉଛନ୍ତି?': { text: 'कहाँ जा रहे हैं?', phonetic: 'Kahan jaa rahe hain?' },
+    'ଆପଣଙ୍କ ନାମ କଣ': { text: 'आपका नाम क्या है?', phonetic: 'Aapka naam kya hai?' },
+    'ଆପଣଙ୍କ ନାମ କଣ?': { text: 'आपका नाम क्या है?', phonetic: 'Aapka naam kya hai?' },
+    'ମୋ ନାମ': { text: 'मेरा नाम', phonetic: 'Mera naam' },
+    'ଖାଦ୍ୟ କେଉଁଠି ମିଳିବ': { text: 'खाना कहाँ मिलेगा?', phonetic: 'Khaana kahan milega?' },
+    'ଖାଦ୍ୟ କେଉଁଠି ମିଳିବ?': { text: 'खाना कहाँ मिलेगा?', phonetic: 'Khaana kahan milega?' },
+    'ଏଠାରେ ରୁହନ୍ତୁ': { text: 'यहाँ रुकिए', phonetic: 'Yahan rukiye' },
+    'ଏଠାକୁ ଆସନ୍ତୁ': { text: 'यहाँ आइए', phonetic: 'Yahan aaiye' },
+  };
+
+  for (const [or, hi] of Object.entries(directMap)) {
+    if (text === or || clean === cleanQueryPunctuation(or)) {
+      return {
+        text: hi.text,
+        phonetic: hi.phonetic,
+        notes: 'Reverse translated from Odia into Hindi',
+      };
+    }
+  }
+
+  return null;
+}
+
 // Transliterate Devanagari to Romanized phonetic script for audio-visual guide
 export function transliterateDevanagariToPhonetic(devanagari: string): string {
   const charMap: Record<string, string> = {
@@ -1209,68 +1608,61 @@ export function findInOfflinePhrasebook(
   sourceLang: LanguageCode,
   targetLang: LanguageCode
 ): { text: string; phonetic: string; notes?: string } | null {
-  const query = inputText.trim().toLowerCase();
-  const cleanQ = cleanQueryPunctuation(inputText);
+  const trimmed = inputText.trim();
+  const cleanQ = cleanQueryPunctuation(trimmed);
 
+  if (!cleanQ) return null;
+
+  // 1. Direct Morpho-phonetic dialect rules (Hindi <-> Odia)
+  if (sourceLang === 'hi' && targetLang === 'or') {
+    const odiaRule = applyOdiaDialectRules(trimmed);
+    if (odiaRule) return odiaRule;
+  }
+  if (sourceLang === 'or' && targetLang === 'hi') {
+    const hiRule = applyOdiaToHindiRules(trimmed);
+    if (hiRule) return hiRule;
+  }
+
+  // 2. Exact match check in curated OFFLINE_PHRASEBOOK
   for (const phrase of OFFLINE_PHRASEBOOK) {
-    let sourceMatch = false;
+    let sourceClean = '';
+    if (sourceLang === 'en') sourceClean = cleanQueryPunctuation(phrase.english);
+    else if (sourceLang === 'hi') sourceClean = cleanQueryPunctuation(phrase.hindi.text);
+    else if (sourceLang === 'or') sourceClean = cleanQueryPunctuation(phrase.odia.text);
+    else if (sourceLang === 'mjl') sourceClean = cleanQueryPunctuation(phrase.mandali.text);
+    else if (sourceLang === 'ml' && phrase.malayalam) sourceClean = cleanQueryPunctuation(phrase.malayalam.text);
 
-    if (sourceLang === 'en') {
-      const cleanP = cleanQueryPunctuation(phrase.english);
-      if (
-        phrase.english.toLowerCase().includes(query) ||
-        (cleanQ && cleanP && (cleanQ === cleanP || (cleanQ.length >= 8 && cleanP.includes(cleanQ)) || (cleanP.length >= 8 && cleanQ.includes(cleanP))))
-      ) {
-        sourceMatch = true;
-      }
-    }
-    if (sourceLang === 'hi') {
-      const cleanP = cleanQueryPunctuation(phrase.hindi.text);
-      if (
-        phrase.hindi.text.includes(query) ||
-        (cleanQ && cleanP && (cleanQ === cleanP || (cleanQ.length >= 6 && cleanP.includes(cleanQ)) || (cleanP.length >= 6 && cleanQ.includes(cleanP)))) ||
-        phrase.hindi.phonetic.toLowerCase().includes(query)
-      ) {
-        sourceMatch = true;
-      }
-    }
-    if (sourceLang === 'or') {
-      const cleanP = cleanQueryPunctuation(phrase.odia.text);
-      if (
-        phrase.odia.text.includes(query) ||
-        (cleanQ && cleanP && (cleanQ === cleanP || (cleanQ.length >= 6 && cleanP.includes(cleanQ)) || (cleanP.length >= 6 && cleanQ.includes(cleanP)))) ||
-        phrase.odia.phonetic.toLowerCase().includes(query)
-      ) {
-        sourceMatch = true;
-      }
-    }
-    if (sourceLang === 'mjl') {
-      const cleanP = cleanQueryPunctuation(phrase.mandali.text);
-      if (
-        phrase.mandali.text.includes(query) ||
-        (cleanQ && cleanP && (cleanQ === cleanP || (cleanQ.length >= 6 && cleanP.includes(cleanQ)) || (cleanP.length >= 6 && cleanQ.includes(cleanP)))) ||
-        phrase.mandali.phonetic.toLowerCase().includes(query)
-      ) {
-        sourceMatch = true;
-      }
-    }
-    if (sourceLang === 'ml' && phrase.malayalam) {
-      const cleanP = cleanQueryPunctuation(phrase.malayalam.text);
-      if (
-        phrase.malayalam.text.includes(query) ||
-        (cleanQ && cleanP && (cleanQ === cleanP || (cleanQ.length >= 6 && cleanP.includes(cleanQ)) || (cleanP.length >= 6 && cleanQ.includes(cleanP)))) ||
-        phrase.malayalam.phonetic.toLowerCase().includes(query)
-      ) {
-        sourceMatch = true;
-      }
-    }
-
-    if (sourceMatch) {
+    if (sourceClean && cleanQ === sourceClean) {
       if (targetLang === 'hi') return { text: phrase.hindi.text, phonetic: phrase.hindi.phonetic, notes: 'Direct match from offline interstate emergency phrasebook' };
       if (targetLang === 'en') return { text: phrase.english, phonetic: phrase.english, notes: 'Direct match from offline phrasebook' };
       if (targetLang === 'or') return { text: phrase.odia.text, phonetic: phrase.odia.phonetic, notes: 'Direct match from offline phrasebook' };
       if (targetLang === 'mjl') return { text: phrase.mandali.text, phonetic: phrase.mandali.phonetic, notes: 'Authentic Mandali phrasing from offline phrasebook' };
       if (targetLang === 'ml' && phrase.malayalam) return { text: phrase.malayalam.text, phonetic: phrase.malayalam.phonetic, notes: 'Direct match from offline Malayalam lexicon' };
+    }
+  }
+
+  // 3. Substring / Prefix match ONLY for queries of sufficient length (>= 5 chars) to prevent short word false positives
+  if (cleanQ.length >= 5) {
+    for (const phrase of OFFLINE_PHRASEBOOK) {
+      let sourceClean = '';
+      if (sourceLang === 'en') sourceClean = cleanQueryPunctuation(phrase.english);
+      else if (sourceLang === 'hi') sourceClean = cleanQueryPunctuation(phrase.hindi.text);
+      else if (sourceLang === 'or') sourceClean = cleanQueryPunctuation(phrase.odia.text);
+      else if (sourceLang === 'mjl') sourceClean = cleanQueryPunctuation(phrase.mandali.text);
+      else if (sourceLang === 'ml' && phrase.malayalam) sourceClean = cleanQueryPunctuation(phrase.malayalam.text);
+
+      if (sourceClean) {
+        const isPrefixMatch = sourceClean.startsWith(cleanQ) || (sourceClean.length >= 7 && cleanQ.startsWith(sourceClean));
+        const isSubMatch = (cleanQ.length >= 6 && sourceClean.includes(cleanQ)) || (sourceClean.length >= 6 && cleanQ.includes(sourceClean));
+
+        if (isPrefixMatch || isSubMatch) {
+          if (targetLang === 'hi') return { text: phrase.hindi.text, phonetic: phrase.hindi.phonetic, notes: 'Direct match from offline interstate emergency phrasebook' };
+          if (targetLang === 'en') return { text: phrase.english, phonetic: phrase.english, notes: 'Direct match from offline phrasebook' };
+          if (targetLang === 'or') return { text: phrase.odia.text, phonetic: phrase.odia.phonetic, notes: 'Direct match from offline phrasebook' };
+          if (targetLang === 'mjl') return { text: phrase.mandali.text, phonetic: phrase.mandali.phonetic, notes: 'Authentic Mandali phrasing from offline phrasebook' };
+          if (targetLang === 'ml' && phrase.malayalam) return { text: phrase.malayalam.text, phonetic: phrase.malayalam.phonetic, notes: 'Direct match from offline Malayalam lexicon' };
+        }
+      }
     }
   }
 
