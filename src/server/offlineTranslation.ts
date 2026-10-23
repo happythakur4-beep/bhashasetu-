@@ -2,12 +2,14 @@ import {
   findInOfflinePhrasebook,
   transliterateDevanagariToPhonetic,
   transliterateOdiaToPhonetic,
+  detectLanguage,
 } from '../services/languageRegistry';
 
 export const langNames: Record<string, string> = {
+  auto: 'Auto-Detect (Identify input language automatically among Hindi, Mandyali/Mandali Pahadi, Odia for Urmila, Punjabi, Bengali, English, etc.)',
   hi: 'Hindi (हिन्दी - Devanagari script)',
   en: 'Indian English',
-  or: 'Odia (ଓଡ଼ିଆ - Odia script)',
+  or: 'Odia for Urmila (ओडिया फॉर उर्मिला / ଓଡ଼ିଆ - Odia script)',
   mjl: 'Mandyali / Mandali (माण्डली - Western Pahadi of Mandi, Himachal Pradesh; write in Devanagari script. NOTE: Experimental dialect model, requires native speaker validation)',
   pa: 'Punjabi (ਪੰਜਾਬੀ - Gurmukhi script)',
   bn: 'Bengali (বাংলা - Bengali script)',
@@ -24,13 +26,14 @@ export function getHonestOfflineTranslation(
   targetLang: string
 ): { success: boolean; data?: any; error?: string; code?: string } {
   const trimmed = text.trim();
+  const effectiveSource = sourceLang === 'auto' ? detectLanguage(trimmed) : sourceLang;
 
   // 1. Same-language passthrough
-  if (sourceLang === targetLang) {
+  if (effectiveSource === targetLang) {
     let phonetic = trimmed;
-    if (sourceLang === 'hi' || sourceLang === 'mjl') {
+    if (effectiveSource === 'hi' || effectiveSource === 'mjl') {
       phonetic = transliterateDevanagariToPhonetic(trimmed);
-    } else if (sourceLang === 'or') {
+    } else if (effectiveSource === 'or') {
       phonetic = transliterateOdiaToPhonetic(trimmed);
     }
     return {
@@ -38,7 +41,7 @@ export function getHonestOfflineTranslation(
       data: {
         translatedText: trimmed,
         phoneticText: phonetic,
-        detectedSource: sourceLang,
+        detectedSource: effectiveSource,
         confidence: 1.0,
         isOffline: true,
         engine: 'offline-lexicon',
@@ -49,7 +52,7 @@ export function getHonestOfflineTranslation(
   // 2. Exact curated phrasebook match
   const phraseMatch = findInOfflinePhrasebook(
     trimmed,
-    sourceLang as any,
+    effectiveSource as any,
     targetLang as any
   );
   if (phraseMatch) {
@@ -58,9 +61,9 @@ export function getHonestOfflineTranslation(
       data: {
         translatedText: phraseMatch.text,
         phoneticText: phraseMatch.phonetic,
-        detectedSource: sourceLang,
-        dialectNotes: phraseMatch.notes || 'Matched from curated offline phrasebook lexicon',
+        detectedSource: effectiveSource,
         confidence: 1.0,
+        dialectNotes: phraseMatch.notes || 'Matched from curated offline phrasebook lexicon',
         isOffline: true,
         engine: 'offline-lexicon',
       },

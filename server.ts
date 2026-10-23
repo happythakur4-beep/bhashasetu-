@@ -378,10 +378,15 @@ app.post('/api/translate', createRateLimiter(60), async (req, res) => {
   }
 
   try {
+    const isAutoDetect = sourceLang === 'auto';
+    const effectiveSourceName = isAutoDetect
+      ? 'Auto-Detect (Identify whether the user input is Hindi, Mandyali/Mandali Pahadi, Odia for Urmila, Punjabi, Bengali, English, Marathi, Tamil, Telugu, etc.)'
+      : sourceName;
+
     const prompt = `You are a real-time linguistic engine for "BhashaSetu", an inter-state voice translator in India.
 Your mission is to translate speech between Indian regional languages with cultural and dialectal precision.
 
-Source language: ${sourceName}
+Source language: ${effectiveSourceName}
 Target language: ${targetName}
 Context: ${context || 'Interstate voice intercom, emergency logistics, and travel conversation'}
 
@@ -389,11 +394,13 @@ Input text to translate:
 "${text}"
 
 Special Linguistic Rules:
+- If source language is "Auto-Detect":
+  Identify the exact input language/dialect and return its code in "detectedSource" (e.g. "hi", "mjl", "or", "pa", "bn", "en", "mr", "ta", "te") and its readable name in "detectedSourceName" (e.g. "Hindi", "Mandali Pahadi", "Odia for Urmila", "Punjabi", "Bengali", "English").
 - If translating into "Mandyali" / "Mandali" (Western Pahadi spoken in Mandi, Himachal Pradesh):
   Use authentic Mandali grammar, honorifics, and vocabulary in Devanagari script.
   For example: "Where are you going?" -> "तुसां कुथु जांदे?" or "कुथु जांदे?"; "What is your name?" -> "तुहाड़ा नां के है?"; "How are you?" -> "केड़ा हाल चाल है?"; "Thank you" -> "बड़ा-बड़ा धन्यवाद / मेहरबानी"; "I need water" -> "मां जो पाणी चहिदा".
   (Note: Mandyali is an experimental dialect model and requires native speaker validation).
-- If translating into "Odia":
+- If translating into "Odia" / "Odia for Urmila":
   MUST use proper Odia script Unicode range \\u0B00-\\u0B7F (e.g., ନମସ୍କାର, ଆପଣ କେମିତି ଅଛନ୍ତି, ଧନ୍ୟବାଦ). Do not output English or Devanagari for Odia.
 - If translating into "Hindi":
   Use natural conversational Hindi in Devanagari script.
@@ -404,7 +411,8 @@ Respond ONLY with a valid JSON object matching this schema:
 {
   "translatedText": "the translation in the native script of the target language",
   "phoneticText": "phonetic transliteration in Latin/English characters so an Indian traveler can pronounce it easily",
-  "detectedSource": "${sourceLang}",
+  "detectedSource": "detected language code e.g. hi, mjl, or, pa, bn, en",
+  "detectedSourceName": "readable name of detected language/dialect",
   "dialectNotes": "short 1-line note explaining regional nuance or honorific used (in English)",
   "confidence": 0.95
 }`;

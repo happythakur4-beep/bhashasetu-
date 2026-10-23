@@ -12,6 +12,7 @@ interface LanguageSelectorProps {
   title: string;
   subtitle?: string;
   excludeLang?: LanguageCode;
+  allowAutoDetect?: boolean;
   onOpenPackManager?: () => void;
 }
 
@@ -23,6 +24,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   title,
   subtitle,
   excludeLang,
+  allowAutoDetect = true,
   onOpenPackManager,
 }) => {
   const { isDark } = useTheme();
@@ -91,7 +93,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
           />
           <span>
             <strong>Interstate Dialect Bridge:</strong> Full support for{' '}
-            <strong>Mandali / Mandyali (Himachal)</strong>, <strong>Odia (Odisha)</strong>,{' '}
+            <strong>Mandali / Mandyali (Himachal)</strong>, <strong>Odia for Urmila (Odisha)</strong>,{' '}
             <strong>Hindi</strong>, and <strong>English</strong> with offline phonetics.
           </span>
         </div>
@@ -102,7 +104,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
             isDark ? 'divide-zinc-800/40' : 'divide-slate-200/40'
           }`}
         >
-          {SUPPORTED_LANGUAGES.map((lang: LanguageConfig) => {
+          {SUPPORTED_LANGUAGES.filter((l) => (allowAutoDetect ? true : l.code !== 'auto')).map((lang: LanguageConfig) => {
             const isSelected = selectedLang === lang.code;
             const isExcluded = excludeLang === lang.code;
 

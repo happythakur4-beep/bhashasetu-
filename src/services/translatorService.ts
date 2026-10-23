@@ -3,6 +3,7 @@ import {
   findInOfflinePhrasebook,
   transliterateDevanagariToPhonetic,
   transliterateOdiaToPhonetic,
+  detectLanguage,
 } from './languageRegistry';
 import { audioEngine } from './audioEngine';
 import { customVocabularyService } from './customVocabularyService';
@@ -171,8 +172,10 @@ class TranslatorService {
 
     const id = `tx_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
+    const effectiveSource = sourceLang === 'auto' ? detectLanguage(trimmed) : sourceLang;
+
     // If source and target are the same language
-    if (sourceLang === targetLang) {
+    if (sourceLang !== 'auto' && sourceLang === targetLang) {
       let phonetic = trimmed;
       if (sourceLang === 'hi' || sourceLang === 'mjl') {
         phonetic = transliterateDevanagariToPhonetic(trimmed);
@@ -186,6 +189,7 @@ class TranslatorService {
         phoneticText: phonetic,
         sourceLang,
         targetLang,
+        detectedLang: effectiveSource,
         isOffline: true,
         engine: 'offline-lexicon',
         confidence: 1.0,
@@ -231,6 +235,9 @@ class TranslatorService {
               ? `${json.data.dialectNotes || ''} (Learned Vocab Applied: ${appliedWords.map(w => w.sourceWord).join(', ')})`
               : json.data.dialectNotes;
 
+            const detectedSource = (json.data.detectedSource as LanguageCode) || effectiveSource;
+            const detectedSourceName = json.data.detectedSourceName;
+
             return {
               id,
               originalText: trimmed,
@@ -238,6 +245,8 @@ class TranslatorService {
               phoneticText: json.data.phoneticText || customAppliedText,
               sourceLang,
               targetLang,
+              detectedLang: detectedSource,
+              detectedLangName: detectedSourceName,
               isOffline: isOfflineResult,
               engine: isOfflineResult ? 'offline-lexicon' : 'gemini-neural',
               confidence: json.data.confidence ?? (isOfflineResult ? 0.6 : 0.95),
@@ -250,7 +259,7 @@ class TranslatorService {
           const errData = await res.json().catch(() => ({}));
           if (res.status === 429 || errData.code === 'QUOTA_EXCEEDED') {
             selfHealingEngine.healGeminiAI('Gemini Quota (429) limit hit; auto-switched to offline dialect lexicon');
-            const phraseMatch = findInOfflinePhrasebook(trimmed, sourceLang, targetLang);
+            const phraseMatch = findInOfflinePhrasebook(trimmed, effectiveSource, targetLang);
             if (phraseMatch) {
               return {
                 id,
@@ -259,6 +268,7 @@ class TranslatorService {
                 phoneticText: phraseMatch.phonetic,
                 sourceLang,
                 targetLang,
+                detectedLang: effectiveSource,
                 isOffline: true,
                 engine: 'offline-lexicon',
                 confidence: 1.0,
@@ -312,7 +322,7 @@ class TranslatorService {
 
     // 2. Honest Offline Fallback Strategy:
     // A. Check curated offline phrasebook (confidence 1.0)
-    const phraseMatch = findInOfflinePhrasebook(trimmed, sourceLang, targetLang);
+    const phraseMatch = findInOfflinePhrasebook(trimmed, effectiveSource, targetLang);
     if (phraseMatch) {
       return {
         id,
@@ -321,6 +331,7 @@ class TranslatorService {
         phoneticText: phraseMatch.phonetic,
         sourceLang,
         targetLang,
+        detectedLang: effectiveSource,
         isOffline: true,
         engine: 'offline-lexicon',
         confidence: 1.0,

@@ -2,6 +2,24 @@ import { LanguageCode, LanguageConfig, PhraseItem, RadioChannel } from '../types
 
 export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
   {
+    code: 'auto',
+    name: 'Auto-Detect',
+    nativeName: '✨ स्वतः पहचान (Auto-Detect)',
+    state: 'Pan-India & Regional Dialects',
+    region: 'Universal AI Speech Sensing',
+    script: 'All Regional Dialects',
+    flagEmoji: '✨',
+    sttCode: 'hi-IN',
+    ttsCode: 'hi-IN',
+    ttsPitch: 1.0,
+    ttsRate: 1.0,
+    greetingExample: {
+      native: 'बोलिए, ऐप खुद भाषा पहचान लेगी...',
+      phonetic: 'Boliye, app khud bhasha pehchan legi...',
+      english: 'Speak, the app detects language automatically',
+    },
+  },
+  {
     code: 'hi',
     name: 'Hindi',
     nativeName: 'हिन्दी',
@@ -39,8 +57,8 @@ export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
   },
   {
     code: 'or',
-    name: 'Odia',
-    nativeName: 'ଓଡ଼ିଆ',
+    name: 'Odia for Urmila',
+    nativeName: 'ओडिया फॉर उर्मिला (ଓଡ଼ିଆ)',
     state: 'Odisha',
     region: 'Eastern India',
     script: 'Odia',
@@ -1613,12 +1631,15 @@ export function findInOfflinePhrasebook(
 
   if (!cleanQ) return null;
 
+  // Resolve 'auto' source language using intelligent script and lexicon detection
+  const resolvedSource: LanguageCode = sourceLang === 'auto' ? detectLanguage(trimmed) : sourceLang;
+
   // 1. Direct Morpho-phonetic dialect rules (Hindi <-> Odia)
-  if (sourceLang === 'hi' && targetLang === 'or') {
+  if (resolvedSource === 'hi' && targetLang === 'or') {
     const odiaRule = applyOdiaDialectRules(trimmed);
     if (odiaRule) return odiaRule;
   }
-  if (sourceLang === 'or' && targetLang === 'hi') {
+  if (resolvedSource === 'or' && targetLang === 'hi') {
     const hiRule = applyOdiaToHindiRules(trimmed);
     if (hiRule) return hiRule;
   }
@@ -1626,11 +1647,11 @@ export function findInOfflinePhrasebook(
   // 2. Exact match check in curated OFFLINE_PHRASEBOOK
   for (const phrase of OFFLINE_PHRASEBOOK) {
     let sourceClean = '';
-    if (sourceLang === 'en') sourceClean = cleanQueryPunctuation(phrase.english);
-    else if (sourceLang === 'hi') sourceClean = cleanQueryPunctuation(phrase.hindi.text);
-    else if (sourceLang === 'or') sourceClean = cleanQueryPunctuation(phrase.odia.text);
-    else if (sourceLang === 'mjl') sourceClean = cleanQueryPunctuation(phrase.mandali.text);
-    else if (sourceLang === 'ml' && phrase.malayalam) sourceClean = cleanQueryPunctuation(phrase.malayalam.text);
+    if (resolvedSource === 'en') sourceClean = cleanQueryPunctuation(phrase.english);
+    else if (resolvedSource === 'hi') sourceClean = cleanQueryPunctuation(phrase.hindi.text);
+    else if (resolvedSource === 'or') sourceClean = cleanQueryPunctuation(phrase.odia.text);
+    else if (resolvedSource === 'mjl') sourceClean = cleanQueryPunctuation(phrase.mandali.text);
+    else if (resolvedSource === 'ml' && phrase.malayalam) sourceClean = cleanQueryPunctuation(phrase.malayalam.text);
 
     if (sourceClean && cleanQ === sourceClean) {
       if (targetLang === 'hi') return { text: phrase.hindi.text, phonetic: phrase.hindi.phonetic, notes: 'Direct match from offline interstate emergency phrasebook' };
@@ -1645,11 +1666,11 @@ export function findInOfflinePhrasebook(
   if (cleanQ.length >= 5) {
     for (const phrase of OFFLINE_PHRASEBOOK) {
       let sourceClean = '';
-      if (sourceLang === 'en') sourceClean = cleanQueryPunctuation(phrase.english);
-      else if (sourceLang === 'hi') sourceClean = cleanQueryPunctuation(phrase.hindi.text);
-      else if (sourceLang === 'or') sourceClean = cleanQueryPunctuation(phrase.odia.text);
-      else if (sourceLang === 'mjl') sourceClean = cleanQueryPunctuation(phrase.mandali.text);
-      else if (sourceLang === 'ml' && phrase.malayalam) sourceClean = cleanQueryPunctuation(phrase.malayalam.text);
+      if (resolvedSource === 'en') sourceClean = cleanQueryPunctuation(phrase.english);
+      else if (resolvedSource === 'hi') sourceClean = cleanQueryPunctuation(phrase.hindi.text);
+      else if (resolvedSource === 'or') sourceClean = cleanQueryPunctuation(phrase.odia.text);
+      else if (resolvedSource === 'mjl') sourceClean = cleanQueryPunctuation(phrase.mandali.text);
+      else if (resolvedSource === 'ml' && phrase.malayalam) sourceClean = cleanQueryPunctuation(phrase.malayalam.text);
 
       if (sourceClean) {
         const isPrefixMatch = sourceClean.startsWith(cleanQ) || (sourceClean.length >= 7 && cleanQ.startsWith(sourceClean));
@@ -1667,4 +1688,83 @@ export function findInOfflinePhrasebook(
   }
 
   return null;
+}
+
+/**
+ * Intelligent Language & Regional Dialect Detector
+ * Detects scripts (Odia, Gurmukhi, Bengali, Malayalam, Tamil, Telugu, Latin)
+ * and distinguishes Devanagari regional dialects (Mandali / Mandyali vs Hindi).
+ */
+export function detectLanguage(text: string): LanguageCode {
+  if (!text || !text.trim()) return 'hi';
+  const trimmed = text.trim();
+
+  // 1. Odia Unicode block: \u0B00-\u0B7F
+  if (/[\u0B00-\u0B7F]/.test(trimmed)) {
+    return 'or'; // Odia for Urmila
+  }
+
+  // 2. Gurmukhi / Punjabi: \u0A00-\u0A7F
+  if (/[\u0A00-\u0A7F]/.test(trimmed)) {
+    return 'pa';
+  }
+
+  // 3. Bengali / Assamese: \u0980-\u09FF
+  if (/[\u0980-\u09FF]/.test(trimmed)) {
+    return 'bn';
+  }
+
+  // 4. Tamil: \u0B80-\u0BFF
+  if (/[\u0B80-\u0BFF]/.test(trimmed)) {
+    return 'ta';
+  }
+
+  // 5. Telugu: \u0C00-\u0C7F
+  if (/[\u0C00-\u0C7F]/.test(trimmed)) {
+    return 'te';
+  }
+
+  // 6. Malayalam: \u0D00-\u0D7F
+  if (/[\u0D00-\u0D7F]/.test(trimmed)) {
+    return 'ml';
+  }
+
+  // 7. Gujarati: \u0A80-\u0AFF
+  if (/[\u0A80-\u0AFF]/.test(trimmed)) {
+    return 'gu';
+  }
+
+  // 8. Kannada: \u0C80-\u0CFF
+  if (/[\u0C80-\u0CFF]/.test(trimmed)) {
+    return 'kn';
+  }
+
+  // 9. Devanagari block: \u0900-\u097F
+  if (/[\u0900-\u097F]/.test(trimmed)) {
+    // Check if it contains distinctive Mandyali / Mandali Pahadi lexicon:
+    const mandaliTokens = [
+      'तुसां', 'तुहाड़ा', 'तुहाडे', 'कुथु', 'कुथी', 'जांदे', 'आसा', 'ऐन्सा', 'कजो',
+      'केहड़ा', 'माहणू', 'गल्ल', 'रास्ता', 'कुत्थे', 'मिंजो', 'तिंजो', 'खाड्डा',
+      'पाणी', 'चहिदा', 'चहिदी', 'चहिदे', 'मां जो', 'सदो', 'इथी', 'इत्थी', 'म्हारी',
+      'अस्सां', 'भुल्ली', 'गेहेन', 'मेहरबानी', 'बड़ा-बड़ा', 'हौर', 'कित्ती', 'सुणाओ',
+      'दादिए', 'नां के', 'केड़ा हाल', 'नि आंदा', 'आंदे', 'करदे'
+    ];
+    for (const token of mandaliTokens) {
+      if (trimmed.includes(token)) {
+        return 'mjl'; // Mandali Pahadi
+      }
+    }
+    return 'hi'; // Default Devanagari to Hindi
+  }
+
+  // 10. Latin / English letters: [a-zA-Z]
+  if (/[a-zA-Z]/.test(trimmed)) {
+    return 'en';
+  }
+
+  return 'hi';
+}
+
+export function getLanguageConfig(code: LanguageCode): LanguageConfig {
+  return SUPPORTED_LANGUAGES.find((l) => l.code === code) || SUPPORTED_LANGUAGES[1]; // default to Hindi if not found
 }

@@ -653,7 +653,7 @@ export const WalkieTalkieView: React.FC<WalkieTalkieViewProps> = ({
         id: result.id,
         sender: 'self',
         senderName: isEmergencyBroadcast ? '🚨 EMERGENCY SOS (Priority)' : 'You (Local Station)',
-        sourceLang,
+        sourceLang: result.detectedLang || sourceLang,
         targetLang,
         originalText: result.originalText,
         translatedText: result.translatedText,
@@ -1303,6 +1303,12 @@ export const WalkieTalkieView: React.FC<WalkieTalkieViewProps> = ({
                 )}
               </div>
               <div className="flex items-center gap-1.5 flex-wrap">
+                {latestTransmission.detectedLang && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-purple-950/80 text-purple-300 border border-purple-500/50 flex items-center gap-1 font-mono">
+                    <Sparkles className="w-2.5 h-2.5 text-purple-400" />
+                    <span>स्वतः पहचान: {latestTransmission.detectedLangName || latestTransmission.detectedLang.toUpperCase()}</span>
+                  </span>
+                )}
                 {latestOpusStats && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-500/50 flex items-center gap-1 font-mono">
                     <Zap className="w-2.5 h-2.5 text-emerald-400 animate-pulse" />
@@ -1857,8 +1863,9 @@ export const WalkieTalkieView: React.FC<WalkieTalkieViewProps> = ({
         selectedLang={sourceLang}
         onSelectLang={onChangeSourceLang}
         title="Select Your Language"
-        subtitle="The language you will speak into the microphone"
+        subtitle="The language you will speak into the microphone (or ✨ Auto-Detect)"
         excludeLang={targetLang}
+        allowAutoDetect={true}
         onOpenPackManager={onOpenPackManager}
       />
       <LanguageSelector
@@ -1869,6 +1876,7 @@ export const WalkieTalkieView: React.FC<WalkieTalkieViewProps> = ({
         title="Select Translation Language"
         subtitle="The language output to room listeners and phone speaker"
         excludeLang={sourceLang}
+        allowAutoDetect={false}
         onOpenPackManager={onOpenPackManager}
       />
 

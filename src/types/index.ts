@@ -1,4 +1,5 @@
 export type LanguageCode = 
+  | 'auto'
   | 'hi' | 'en' | 'or' | 'mjl' | 'pa' | 'bn' | 'mr' | 'ml'
   | 'ta' | 'te' | 'kn' | 'gu' | 'ur' | 'as' | 'sa' | 'ne' 
   | 'ks' | 'sd' | 'kok' | 'mni' | 'mai' | 'doi' | 'sat' | 'brx';
@@ -34,6 +35,8 @@ export interface TranslationResult {
   isOffline: boolean;
   engine: 'gemini-neural' | 'offline-lexicon' | 'rule-morphology';
   confidence: number;
+  detectedLang?: LanguageCode;
+  detectedLangName?: string;
   dialectNotes?: string;
   audioBase64?: string;
   appliedLearnedWords?: string[];

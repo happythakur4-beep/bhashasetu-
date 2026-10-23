@@ -554,7 +554,7 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
         id: result.id,
         sender: speaker === 'A' ? 'self' : 'peer',
         senderName: speaker === 'A' ? `Speaker 1 (${langA.name})` : `Speaker 2 (${langB.name})`,
-        sourceLang: fromLang,
+        sourceLang: result.detectedLang || fromLang,
         targetLang: toLang,
         originalText: result.originalText,
         translatedText: result.translatedText,
@@ -647,7 +647,7 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
         id: result.id,
         sender: speaker === 'A' ? 'self' : 'peer',
         senderName: speaker === 'A' ? `Speaker 1 (${langA.name})` : `Speaker 2 (${langB.name})`,
-        sourceLang: fromLang,
+        sourceLang: result.detectedLang || fromLang,
         targetLang: toLang,
         originalText: result.originalText,
         translatedText: result.translatedText,
@@ -1223,19 +1223,27 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
                 }
               >
                 <div className="flex items-center justify-between text-[11px] font-mono mb-1">
-                  <span
-                    className={`font-bold ${
-                      isSpeakerA
-                        ? isDark
-                          ? 'text-emerald-400'
-                          : 'text-blue-700'
-                        : isDark
-                        ? 'text-amber-400'
-                        : 'text-purple-700'
-                    }`}
-                  >
-                    {item.senderName}
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span
+                      className={`font-bold ${
+                        isSpeakerA
+                          ? isDark
+                            ? 'text-emerald-400'
+                            : 'text-blue-700'
+                          : isDark
+                          ? 'text-amber-400'
+                          : 'text-purple-700'
+                      }`}
+                    >
+                      {item.senderName}
+                    </span>
+                    {item.sourceLang && (sourceLang === 'auto' || targetLang === 'auto') && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold bg-purple-950/80 text-purple-300 border border-purple-500/50 flex items-center gap-1 font-mono">
+                        <Sparkles className="w-2.5 h-2.5 text-purple-400" />
+                        <span>स्वतः पहचान: {item.sourceLang.toUpperCase()}</span>
+                      </span>
+                    )}
+                  </div>
                   <div className={`flex items-center space-x-1.5 ${isDark ? 'text-zinc-400' : 'text-slate-400'}`}>
                     {item.isOffline && (
                       <span
@@ -1809,7 +1817,9 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
         selectedLang={sourceLang}
         onSelectLang={onChangeSourceLang}
         title="Select Speaker 1 Language"
+        subtitle="The language Speaker 1 will speak (or ✨ Auto-Detect)"
         excludeLang={targetLang}
+        allowAutoDetect={true}
         onOpenPackManager={onOpenPackManager}
       />
       <LanguageSelector
@@ -1818,7 +1828,9 @@ export const DualTranslatorView: React.FC<DualTranslatorViewProps> = ({
         selectedLang={targetLang}
         onSelectLang={onChangeTargetLang}
         title="Select Speaker 2 Language"
+        subtitle="The language Speaker 2 will speak (or ✨ Auto-Detect)"
         excludeLang={sourceLang}
+        allowAutoDetect={true}
         onOpenPackManager={onOpenPackManager}
       />
 
